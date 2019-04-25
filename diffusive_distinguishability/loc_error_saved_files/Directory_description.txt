@@ -1,0 +1,20 @@
+This directory contains pre-calculated results, so that the user doesn't need to re-run analysis which takes a long time to run.
+
+For each file, a localization error is defined (as the standard deviation of a gaussian used to blur positions). This error is lsited as the numberican extension of each file name (in microns).
+
+Each file contains a numpy array, and each entry of the numpy array is a measurement of the percent error of a posterior distribution's mean relative to the true underlying value. The array is 2D, giving many repliactes of the error calculation (along axis 0) for different numbers of spatial dimensions (axis 1).
+
+
+Package used to generate these files: ndim_homogeneous_distinguishability.py/
+Function used to generate these files: get_dim_error
+
+
+Parameters used to generate these files:
+
+The number of spatial dimensions used were: [1, 2, 3, 5, 10, 100, 1000]
+The stanard deviation of localization error gaussians (in microns) used were: 
+[0, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.075, 0.1]
+Diffusion constant D (um2/s): 0.1
+Trajectory length T: 10**3
+Timestep size (s) dt: 1
+Number of replicates for each parameter set: 10**4
