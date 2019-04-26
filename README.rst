@@ -3,12 +3,6 @@ diffusive_distinguishability
 ============================
 
 
-.. image:: https://img.shields.io/pypi/v/diffusive_distinguishability.svg
-        :target: https://pypi.python.org/pypi/diffusive_distinguishability
-
-.. image:: https://img.shields.io/travis/jcass11/diffusive_distinguishability.svg
-        :target: https://travis-ci.org/jcass11/diffusive_distinguishability
-
 .. image:: https://readthedocs.org/projects/diffusive-distinguishability/badge/?version=latest
         :target: https://diffusive-distinguishability.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
