@@ -8,7 +8,7 @@ import seaborn as sns
 import multiprocessing as mp
 
 
-### Simulation of trajectories and storage of trajectory data
+# Simulation of trajectories and storage of trajectory data
 
 def simulate_diffusion_df(n_dim, D, T, dt, loc_std=0):
     """Simulate and output a single trajectory of homogeneous diffusion in a specified number of dimensions.
@@ -16,7 +16,7 @@ def simulate_diffusion_df(n_dim, D, T, dt, loc_std=0):
     :param D: diffusion constant (um2/s)
     :param T: trajectory length (number of steps)
     :param dt: timestep size (s)
-    :param loc_std: standard deviation for guassian localization error (um)
+    :param loc_std: standard deviation for Gaussian localization error (um)
     :return: trajectory dataframe (position in n_dim dimensions, at each timepoint)
     """
 
@@ -28,43 +28,48 @@ def simulate_diffusion_df(n_dim, D, T, dt, loc_std=0):
     x_obs = [sum(i) for i in zip(x, [loc_std*np.random.randn()for dim in range(n_dim)])] 
     df = pd.DataFrame()
     
-    # at each timestep, stochastically select step size in each dimension to find new location to add to trajectory
+    # at each time-step, stochastically select step size in each dimension to find new location to add to trajectory
     for t in np.linspace(0, (T-1)*dt, T):
         
-        dx = [np.sqrt(2*D*dt)*np.random.randn() for dim in range(n_dim)]
-        noise = [loc_std*np.random.randn() for dim in range(n_dim)]
+        dx = [np.sqrt(2*D*dt)*np.random.randn() for _dim in range(n_dim)]
+        noise = [loc_std*np.random.randn() for _dim in range(n_dim)]
         
-        x_new  = [sum(i) for i in zip(x, dx)]
+        x_new = [sum(i) for i in zip(x, dx)]
         x_obs_new = [sum(i) for i in zip(x_new, noise)]
         dx_obs = [sum(i) for i in zip(x_obs_new, np.negative(x_obs))]
+        dr = np.linalg.norm(dx)
+        dr_obs = np.linalg.norm(dx_obs)
         
-        data = {'tstep':t, 'x':x, 'x_obs':x_obs, 'dx':dx, 'dx_obs':dx_obs, 'dr':np.linalg.norm(dx), 'dr_obs':np.linalg.norm(dx_obs)}
+        data = {'tstep': t, 'x': x, 'x_obs': x_obs, 'dx': dx, 'dx_obs': dx_obs, 'dr': dr, 'dr_obs': dr_obs}
         df = df.append(data, ignore_index=True)
         x = x_new
         x_obs = x_obs_new
         
     return df
 
+
 def trajectory_df_from_data(trajectory):
     """If you are using experimental rather than simulated trajectories:
     this will intake a timelapse trajectory and generate a dataframe compatible with this notebook for analysis.
-    :param trajectory: list or array of spatial positions, where each entry is the position at a single timepoint (may be 1D, 2D or 3D)
-    :return: dataframe containing trajectory, n-dimensional displacement vectors for each timestep, and step size magnitudes for each timestep
+    :param trajectory: list or array of spatial positions, where each entry is the position at a single timepoint
+    (may be 1D, 2D or 3D)
+    :return: dataframe containing trajectory, n-dimensional displacement vectors for each timestep, and step size
+    magnitudes for each timestep
     """
 
     df = pd.DataFrame()
 
     for t in range(len(trajectory)-1):
         dx_obs = trajectory[t+1] - trajectory[t]
-        data = {'tstep':t, 'x_obs':trajectory[t], 'dx_obs':dx_obs, 'dr_obs':np.linalg.norm(dx_obs)}
+        data = {'tstep': t, 'x_obs': trajectory[t], 'dx_obs': dx_obs, 'dr_obs': np.linalg.norm(dx_obs)}
         df = df.append(data, ignore_index=True)
         
     return df
 
 
-### Stats utils - posterior generation and comparison
+# Stats utils - posterior generation and comparison
 
-def estimate_diffusion(n_dim, dt, dr, prior = scipy.stats.distributions.invgamma(0,scale=0)):
+def estimate_diffusion(n_dim, dt, dr, prior=scipy.stats.distributions.invgamma(0, scale=0)):
     """Returns the posterior estimate for the diffusion constant given the displacement data and the prior.
     :param n_dim: number of spatial dimensions for simulation (1, 2, or 3)
     :param dt: timestep size (s)
@@ -77,7 +82,7 @@ def estimate_diffusion(n_dim, dt, dr, prior = scipy.stats.distributions.invgamma
     alpha0, beta0 = invgamma_fullparams(prior)
     alpha,  beta = len(dr), sum(dr**2)
         
-    return scipy.stats.distributions.invgamma(alpha0+alpha, scale = beta0+beta), alpha0+alpha, beta0+beta
+    return scipy.stats.distributions.invgamma(alpha0+alpha, scale=beta0+beta), alpha0+alpha, beta0+beta
 
     
 def generate_posterior(n_dim, D, T, dt, loc_std=0):
@@ -87,7 +92,7 @@ def generate_posterior(n_dim, D, T, dt, loc_std=0):
     :param D: diffusion constant (um2/s)
     :param T: trajectory length (number of steps)
     :param dt: timestep size (s)
-    :param loc_std: standard deviation for guassian localization error (um)
+    :param loc_std: standard deviation for Gaussian localization error (um)
     :return alpha, beta: scale and shape parameters for inverse gamma posterior for a diffusive trajectory
     """
     
@@ -95,8 +100,8 @@ def generate_posterior(n_dim, D, T, dt, loc_std=0):
     df = simulate_diffusion_df(n_dim, D, T, dt, loc_std)
     
     # estimate posterior D distribution using prior/posterior with inverse gamma form
-    prior = scipy.stats.distributions.invgamma(0,scale = 0)
-    posterior, alpha, beta = estimate_diffusion(n_dim = n_dim, dt=dt, dr = df['dr_obs'], prior = prior)
+    prior = scipy.stats.distributions.invgamma(0, scale=0)
+    posterior, alpha, beta = estimate_diffusion(n_dim=n_dim, dt=dt, dr=df['dr_obs'], prior=prior)
 
     # return df, posterior, alpha, beta
     return alpha, beta
@@ -111,14 +116,14 @@ def get_posterior_set(n_dim, D, T, dt, N, loc_std=0):
     :param T: trajectory length (number of steps)
     :param dt: timestep size (s)
     :param N: number of trajectories
-    :param loc_std: standard deviation for guassian localization error (um)
+    :param loc_std: standard deviation for Gaussian localization error (um)
     :return alpha, beta, alpha_std, beta_std, alphas, betas: medians, std devs and arrays of scale and 
     shape parameters for inverse gamma posteriors for N diffusive trajectories
     """
     
     n_cpus = mp.cpu_count()
     with mp.Pool(n_cpus-2) as pool:
-        results = pool.starmap(generate_posterior, [(n_dim, D, T, dt, loc_std) for n in range(N)])
+        results = pool.starmap(generate_posterior, [(n_dim, D, T, dt, loc_std) for _n in range(N)])
     alphas = [result[0] for result in results]
     betas = [result[1] for result in results]
     
@@ -130,17 +135,17 @@ def get_posterior_set(n_dim, D, T, dt, N, loc_std=0):
 
 
 def invgamma_fullparams(dist):
-    """Return the alpha,beta paramterization of the inverse gamma distirbution
+    """Return the alpha,beta parameterization of the inverse gamma distirbution
     :param dist: scipy inverse gamma distribution
     :return: alpha and beta parameters characterizing this inverse gamma distribution"""
-    
-    return (dist.args[0],dist.kwds['scale'])
+
+    return dist.args[0], dist.kwds['scale']
 
 
 def invgamma_kldiv(param1, param2):
-    """Compute KL divergence of two inverse gamma distirbutions (ref: https://arxiv.org/pdf/1605.01019.pdf)
-    :param param1: list containing alpha and beta parameters characterizing inverse gamma distribtuion 1
-    :param param2: list containing alpha and beta parameters characterizing inverse gamma distribtuion 2
+    """Compute KL divergence of two inverse gamma distributions (ref: https://arxiv.org/pdf/1605.01019.pdf)
+    :param param1: list containing alpha and beta parameters characterizing inverse gamma distribution 1
+    :param param2: list containing alpha and beta parameters characterizing inverse gamma distribution 2
     :return: KL divergence of two inverse gamma distributions
     """
 
@@ -162,12 +167,12 @@ def invgamma_kldiv(param1, param2):
     return term1 + term2 + term3 + term4a + term4b + term4c + term4d + term4e
 
 
-### Visualization and analyses
+# Visualization and analyses
 
 def compare2(n_dim, D1, mult, T, dt, N, loc_std=0):
     """
-    For one pair of diffusion constants (D, D*mult) get KL divergence of their posteriors, where the posteriors are generated
-    from an alpha and beta which are the median values from repeating posterior estimation N times
+    For one pair of diffusion constants (D, D*mult) get KL divergence of their posteriors, where the posteriors are
+    generated from an alpha and beta which are the median values from repeating posterior estimation N times
     :param n_dim: number of spatial dimensions
     :param D1: diffusion constant (um2/s)
     :param mult: multiplier to get D2 = mult*D1
@@ -184,19 +189,19 @@ def compare2(n_dim, D1, mult, T, dt, N, loc_std=0):
     alpha2, beta2, alphas2, betas2 = get_posterior_set(n_dim, D2, T, dt, N, loc_std)
     
     # plot both posteriors
-    xx = np.linspace(0,1.5*D2, 50)
-    plt.plot(xx, scipy.stats.distributions.invgamma(alpha1,scale=beta1).pdf(xx), label = 'D1 posterior')
-    plt.plot(xx, scipy.stats.distributions.invgamma(alpha2,scale=beta2).pdf(xx), label='D2 posterior')
+    xx = np.linspace(0, 1.5*D2, 50)
+    plt.plot(xx, scipy.stats.distributions.invgamma(alpha1, scale=beta1).pdf(xx), label='D1 posterior')
+    plt.plot(xx, scipy.stats.distributions.invgamma(alpha2, scale=beta2).pdf(xx), label='D2 posterior')
     plt.axvline(x=D1, linestyle=':', color='blue')
-    plt.axvline(x=D2, linestyle=':', color='orange');
+    plt.axvline(x=D2, linestyle=':', color='orange')
     plt.legend()
     plt.xlabel('Diffusion Constant')
     plt.ylabel('Probability density')
     
     # print posterior-pair KL divergence and its inverse
     KL = invgamma_kldiv([alpha1, beta1], [alpha2, beta2])
-    print('KL div: '+ str(KL))
-    print('Inverse: '+ str(1./KL))
+    print('KL div: ' + str(KL))
+    print('Inverse: ' + str(1./KL))
 
     
 def fill_heatmap_gen(n_dim, D, mult_list, T, dt, N, loc_std=0):
@@ -205,9 +210,9 @@ def fill_heatmap_gen(n_dim, D, mult_list, T, dt, N, loc_std=0):
     distributions. Compared posteriors are generated by scanning through pairings of [D, mult*D] where mult takes on 
     the range of values provided by mult_list and trajectory lengths. For each pair of diffusion constants, 
     generate a trajectory of length T and find the associated posterior parameter fit, repeating N times to get 
-    median parameter values (alpha, beta). Use these median values of alpha and beta to select one psoterior D distribution
-    for that diffusion constant. Repeat this process for diffusion constant D*mult, then calculate the KL divergence
-    of the posteriors for (D, D*multiplier) and store in dataframe. Repeat for all pairs of 
+    median parameter values (alpha, beta). Use these median values of alpha and beta to select one posterior D
+    distribution for that diffusion constant. Repeat this process for diffusion constant D*mult, then calculate the
+    KL divergence of the posteriors for (D, D*multiplier) and store in dataframe. Repeat for all pairs of
     (T, multiplier) to fill the dataframe. The results is a heatmap of how distinguishable two diffusion constants are,
     conditional upon their relative values and the length of trajectories used.
     
@@ -226,11 +231,11 @@ def fill_heatmap_gen(n_dim, D, mult_list, T, dt, N, loc_std=0):
     is_list = [isinstance(item,(list,np.ndarray)) for item in params]
     param_ind = int(np.where(is_list)[0])
 
-    # make sure only only parameter (besides mult_list) has been entered as a list to serve as the second axis of sweep figure
+    # make sure only only parameter (besides mult_list) has been entered as a list to be the second axis of sweep figure
     if sum(is_list)!=1:
-        raise ValueError('One and only one input other than "mult" may be multivalues, as they serve as the two axes of a 2D plot.')
+        raise ValueError('Only one input other than "mult" may be multivalued.')
 
-    # set sweep paramter as x axis and create dataframe
+    # set sweep parameter as x axis and create dataframe
     x_list = params[param_ind]
     df = pd.DataFrame(columns=x_list, index=mult_list)
 
@@ -256,16 +261,17 @@ def fill_heatmap_gen(n_dim, D, mult_list, T, dt, N, loc_std=0):
     return df[df.columns].astype(float)
 
 
-### Error visualization analysis
+# Error visualization analysis
 
 
 def show_error_hist(n_dim, p_error):
     """
-    Plot figure with 3 subplots, where each subplot is a histogram of the percent errors from all runs in a given number of spatial dimensions
+    Plot figure with 3 subplots, where each subplot is a histogram of the percent errors from all runs in a given number
+     of spatial dimensions
     :param n_dim: number of spatial dimensions
     :param p_error: array of percent error for all runs in each number of spatial dimensions
     """
-    fig, axs = plt.subplots(1,len(n_dim), figsize=(18,6))
+    fig, axs = plt.subplots(1, len(n_dim), figsize=(18,6))
         
     for i in range(len(n_dim)):
         print('Dim = '+str(i+1)+': '+str(np.mean(p_error[i]))+' +- '+str(np.std(p_error[i])/len(p_error[i])))
@@ -279,8 +285,8 @@ def show_error_hist(n_dim, p_error):
     
 def get_single_error(args):
     """
-    Unpack arguments to generate a single posterior, and calculate the percent error of the posterior mean relative to the true value
-    :param args: set of parameters listed below as 'arg's, all packaged into one object for the sake of parallel processing
+    Unpack args to generate single posterior, and calculate percent error of posterior mean relative to the true value
+    :param args: set of parameters listed below as args, all packaged as one object for the sake of parallel processing
     :arg dim: number of spatial dimensions
     :arg D: diffusion constant (um2/s) whose estimator error we want to calculate
     :arg T: trajectory length (number of steps)
@@ -291,7 +297,7 @@ def get_single_error(args):
     """
     dim, D, T, dt, n, loc_std = args
     alpha, beta = generate_posterior(dim, D, T, dt, loc_std)
-    post_mean = scipy.stats.distributions.invgamma(alpha ,scale=beta).mean()
+    post_mean = scipy.stats.distributions.invgamma(alpha, scale=beta).mean()
     return 100*((post_mean - D)/D)
     
     
@@ -306,7 +312,8 @@ def get_dim_error(n_dim, D, T, dt, N, show_plot, loc_std=0):
     :param N: number of trajectories
     :param show_plot: T/F flag of whether or not to display histograms of estimator errors
     :param loc_std: standard deviation of localization error (um)
-    :return p_error: array of percent error between mean posterior estimation and true value for each run with each number of dimensions
+    :return p_error: array of percent error between mean posterior estimation and true value for each run with each
+    number of dimensions
     """
 
     n_cpus = mp.cpu_count()
@@ -328,6 +335,7 @@ def get_dim_error(n_dim, D, T, dt, N, show_plot, loc_std=0):
 
     return p_error
 
+
 def error_sensitivity(D, T_list, dt, N, loc_std):
     """
     Look at how the mean and median percent error of the posterior mean relative to the true value
@@ -342,26 +350,26 @@ def error_sensitivity(D, T_list, dt, N, loc_std):
     """
     
     size = 8
-    fig, axs = plt.subplots(1,3, figsize=(3*size,size))
+    plt.subplots(1,3, figsize=(3*size, size))
     
     data1 = np.zeros((len(T_list), len(loc_std)))
     data2 = np.zeros((len(T_list), len(loc_std)))
     data3 = np.zeros((len(T_list), len(loc_std)))
     for T in T_list:
         for std in loc_std:
-            p_error = get_dim_error([1,2,3], D, T, dt, N, False, std)
+            p_error = get_dim_error([1, 2, 3], D, T, dt, N, False, std)
             Ti, Ei = np.asarray(T_list).searchsorted(T), np.asarray(loc_std).searchsorted(std)
             data1[Ti, Ei] = np.mean(p_error[0])
             data2[Ti, Ei] = np.mean(p_error[1])
             data3[Ti, Ei] = np.mean(p_error[2])
-    df1 = pd.DataFrame(data=data1, columns = loc_std, index=T_list)
-    df2 = pd.DataFrame(data=data2, columns = loc_std, index=T_list)
-    df3 = pd.DataFrame(data=data3, columns = loc_std, index=T_list)
+    df1 = pd.DataFrame(data=data1, columns=loc_std, index=T_list)
+    df2 = pd.DataFrame(data=data2, columns=loc_std, index=T_list)
+    df3 = pd.DataFrame(data=data3, columns=loc_std, index=T_list)
     
     return df1, df2, df3
 
     
-### Plotting support functions
+# Plotting support functions
 
 def get_ticks(tick_vals, n_round, n_ticks):
     """
@@ -373,14 +381,14 @@ def get_ticks(tick_vals, n_round, n_ticks):
     """
     ticks = tick_vals.round(n_round)
     
-    keepticks = ticks[::int(len(ticks)/n_ticks)]
+    keep_ticks = ticks[::int(len(ticks)/n_ticks)]
     ticks = ['' for t in ticks]
-    ticks[::int(len(ticks)/n_ticks)] = keepticks
+    ticks[::int(len(ticks)/n_ticks)] = keep_ticks
     
     return ticks
 
 
-def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, xlab, ylab):
+def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_lab):
     """
     Plot two df heatmaps as two subplots of one figure. They share x and y axis labels but have differing titles
     :param df1: df to visualize
@@ -390,18 +398,17 @@ def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, xlab, ylab
     :param size: figure size
     :param title1: plot title for left (df1) panel
     :param title2: plot title for left (df2) panel
-    :param xlab: x axis label
-    :param ylab: y axis label
+    :param x_lab: x axis label
+    :param y_lab: y axis label
     """
     # set y ticks: round and only display some to improve readability
-    yticks = get_ticks(df1.index.values, n_round, n_ticks)
-    fig, axs = plt.subplots(1,2, figsize=(2*size,size))
+    y_ticks = get_ticks(df1.index.values, n_round, n_ticks)
+    fig, axs = plt.subplots(1, 2, figsize=(2*size, size))
     
-    sns.heatmap(df1, yticklabels=yticks, cbar_kws={'label': title1}, ax=axs[0], cmap='viridis');
-    axs[0].set(xlabel = xlab, ylabel = ylab, title=title1);
+    sns.heatmap(df1, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[0], cmap='viridis')
+    axs[0].set(xlabel=x_lab, ylabel=y_lab, title=title1)
     axs[0].invert_yaxis()
     
-    sns.heatmap(df2, yticklabels=yticks, cbar_kws={'label': title2}, ax=axs[1], cmap='viridis');
-    axs[1].set(xlabel = xlab, ylabel = ylab, title=title2);
+    sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title2}, ax=axs[1], cmap='viridis')
+    axs[1].set(xlabel=x_lab, ylabel=y_lab, title=title2)
     axs[1].invert_yaxis()
-    
