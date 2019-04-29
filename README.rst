@@ -15,9 +15,10 @@ Getting Started
 ---------------
 
 The python package ``ndim_homogeneous_distinguishability.py`` contains the meat of this project, as a set of functions which can be used to:
-1) Simulate diffusive trajectories (pure diffusion with a homogeneous diffusion constant)
-2) Use Bayesian inference to estimate the diffusion constant used to generate a trajectory by producing a posterior diffusivity distribution
-3) Analyze the dependence of diffusivity estimation error, and the ability to distinguish between trajectories with differing diffusivities, conditional on model parameters
+
+1. Simulate diffusive trajectories (pure diffusion with a homogeneous diffusion constant)
+2. Use Bayesian inference to estimate the diffusion constant used to generate a trajectory by producing a posterior diffusivity distribution
+3. Analyze the dependence of diffusivity estimation error, and the ability to distinguish between trajectories with differing diffusivities, conditional on model parameters
 
 Examples of how to use these functions, as well as some of our own analysis of diffusivity distinguishability, are provided in the Jupyter notebook ``ndim_diffusion_analysis_tutorial.ipynb``.
 
