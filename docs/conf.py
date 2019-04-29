@@ -40,7 +40,7 @@ extensions = [
 ]
 
 # Control napoleon
-napoleon_google_docstring = True
+napoleon_google_docstring = False
 napolean_include_init_with_doc = True
 napoleon_use_ivar = True
 napoleon_use_param = False
