@@ -50,9 +50,7 @@ setup(
     ],
     description="Simulation of homogeneous diffusion, bayesian estimation of underlying diffusion constant and analysis of distinguishability between diffusivities",
     entry_points={
-        'console_scripts': [
-            'my_example=diffusive_distinguishability.bin.my_example:main'
-        ],
+        'console_scripts': [],
     },
     install_requires=requirements,
     license="Allen Institute Software License",
