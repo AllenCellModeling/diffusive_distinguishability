@@ -13,6 +13,7 @@ import multiprocess as mp
 
 def simulate_diffusion_df(n_dim, d_const, n_steps, dt, loc_std=0):
     """Simulate and output a single trajectory of homogeneous diffusion in a specified number of dimensions.
+
     :param n_dim: number of spatial dimensions for simulation (1, 2, or 3)
     :param d_const: diffusion constant (um2/s)
     :param n_steps: trajectory length (number of steps)
@@ -52,6 +53,7 @@ def simulate_diffusion_df(n_dim, d_const, n_steps, dt, loc_std=0):
 def trajectory_df_from_data(trajectory):
     """If you are using experimental rather than simulated trajectories:
     this will intake a timelapse trajectory and generate a dataframe compatible with this notebook for analysis.
+
     :param trajectory: list or array of spatial positions, where each entry is the position at a single timepoint
     (may be 1D, 2D or 3D)
     :return: dataframe containing trajectory, n-dimensional displacement vectors for each timestep, and step size
@@ -73,6 +75,7 @@ def trajectory_df_from_data(trajectory):
 
 def estimate_diffusion(n_dim, dt, dr, prior=scipy.stats.distributions.invgamma(0, scale=0)):
     """Returns the posterior estimate for the diffusion constant given the displacement data and the prior.
+
     :param n_dim: number of spatial dimensions for simulation (1, 2, or 3)
     :param dt: timestep size (s)
     :param dr: list of normed step sizes from a single trajectory (um)
@@ -90,6 +93,7 @@ def estimate_diffusion(n_dim, dt, dr, prior=scipy.stats.distributions.invgamma(0
 def generate_posterior(n_dim, d_const, n_steps, dt, loc_std=0):
     """
     Simulate a single trajectory and find the diffusion constant posterior (inverse gamma) distribution.
+
     :param n_dim: number of spatial dimensions
     :param d_const: diffusion constant (um2/s)
     :param n_steps: trajectory length (number of steps)
@@ -113,6 +117,7 @@ def get_posterior_set(n_dim, d_const, n_steps, dt, n_reps, loc_std=0):
     """
     Repeat analysis generating a posterior diffusion constant distribution per trajectory for multiple trajectories and
     return (1) full set and (2) median values of distribution fit parameters.
+
     :param n_dim: number of spatial dimensions
     :param d_const: diffusion constant (um2/s)
     :param n_steps: trajectory length (number of steps)
@@ -137,7 +142,8 @@ def get_posterior_set(n_dim, d_const, n_steps, dt, n_reps, loc_std=0):
 
 
 def invgamma_fullparams(dist):
-    """Return the alpha,beta parameterization of the inverse gamma distirbution
+    """Return the alpha,beta parameterization of the inverse gamma distribution.
+
     :param dist: scipy inverse gamma distribution
     :return: alpha and beta parameters characterizing this inverse gamma distribution"""
 
@@ -145,7 +151,8 @@ def invgamma_fullparams(dist):
 
 
 def invgamma_kldiv(param1, param2):
-    """Compute KL divergence of two inverse gamma distributions (ref: https://arxiv.org/pdf/1605.01019.pdf)
+    """Compute KL divergence of two inverse gamma distributions (ref: https://arxiv.org/pdf/1605.01019.pdf).
+
     :param param1: list containing alpha and beta parameters characterizing inverse gamma distribution 1
     :param param2: list containing alpha and beta parameters characterizing inverse gamma distribution 2
     :return: KL divergence of two inverse gamma distributions
@@ -176,7 +183,8 @@ def compare2(n_dim, d_const1, mult, n_steps, dt, n_reps, loc_std=0):
     """
     For one pair of diffusion constants (d_const, d_const*mult) get KL divergence of their posteriors, where the
     posteriors are generated from an alpha and beta which are the median values from repeating posterior estimation
-    n_reps times
+    n_reps times.
+
     :param n_dim: number of spatial dimensions
     :param d_const1: diffusion constant (um2/s)
     :param mult: multiplier to get d_const2 = mult*d_const1
@@ -271,7 +279,8 @@ def fill_heatmap_gen(n_dim, d_const, mult_list, n_steps, dt, n_reps, loc_std=0):
 def show_error_hist(n_dim, p_error):
     """
     Plot figure with 3 subplots, where each subplot is a histogram of the percent errors from all runs in a given number
-     of spatial dimensions
+     of spatial dimensions.
+
     :param n_dim: number of spatial dimensions
     :param p_error: array of percent error for all runs in each number of spatial dimensions
     """
@@ -289,7 +298,8 @@ def show_error_hist(n_dim, p_error):
     
 def get_single_error(args):
     """
-    Unpack args to generate single posterior, and calculate percent error of posterior mean relative to the true value
+    Unpack args to generate single posterior, and calculate percent error of posterior mean relative to the true value.
+
     :param args: set of parameters listed below, all packaged as one object for the sake of parallel processing
     dim: number of spatial dimensions
     d_const: diffusion constant (um2/s) whose estimator error we want to calculate
@@ -309,6 +319,7 @@ def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0):
     """
     Given a diffusion constant, get the posterior for a trajectory of length n_steps and timestep dt. Repeat n_reps
     times and report/plot hist of the percent error of the mean posterior values vs true diffusivity values.
+
     :param n_dim: number of spatial dimensions
     :param d_const: diffusion constant (um2/s) whose estimator error we want to calculate
     :param n_steps: trajectory length (number of steps)
@@ -343,7 +354,8 @@ def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0):
 def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std):
     """
     Look at how the mean and median percent error of the posterior mean relative to the true value
-    depend on the trajectory length used to generate posteriors and number of reps we run
+    depend on the trajectory length used to generate posteriors and number of reps we run.
+
     :param d_const: diffusion constants (um2/s)
     :param n_steps_list: list of trajectory lengths to test
     :param dt: timestep(s) used to generate trajectories (s)
@@ -379,7 +391,8 @@ def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std):
 
 def get_ticks(tick_values, n_round, n_ticks):
     """
-    Round tick values and keep only some ticks to improve readability
+    Round tick values and keep only some ticks to improve readability.
+
     :param tick_values: tick values
     :param n_round: number of decimal places to round to
     :param n_ticks: number of ticks to keep
@@ -396,7 +409,8 @@ def get_ticks(tick_values, n_round, n_ticks):
 
 def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_lab):
     """
-    Plot two df heatmaps as two subplots of one figure. They share x and y axis labels but have differing titles
+    Plot two df heatmaps as two subplots of one figure. They share x and y axis labels but have differing titles.
+
     :param df1: df to visualize
     :param df2: second df to visualize (often log of df1)
     :param n_round: number of axis tick decimal places to round to
