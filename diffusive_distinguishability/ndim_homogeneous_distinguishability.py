@@ -52,7 +52,9 @@ def simulate_diffusion_df(n_dim, d_const, n_steps, dt, loc_std=0):
 
 def trajectory_df_from_data(trajectory):
     """If you are using experimental rather than simulated trajectories:
-    this will intake a timelapse trajectory and generate a dataframe compatible with this notebook for analysis.
+    this is an example function for how you might import your own timelapse trajectory and put into the required
+    dataframe format, compatible with this notebook for analysis. This function will likely require edits for
+    individual use, to make it compatible with your input trajectory format.
 
     :param trajectory: list or array of spatial positions, where each entry is the position at a single timepoint
     (may be 1D, 2D or 3D)
