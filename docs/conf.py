@@ -170,5 +170,16 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
+# -- Added to try to fix readthedocs issues with import statements based on: https://docs.readthedocs.io/en/stable/faq.html-
+import sys
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+MOCK_MODULES = ['seabron']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
