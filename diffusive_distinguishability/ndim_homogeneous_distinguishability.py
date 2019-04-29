@@ -5,7 +5,7 @@ import scipy.special
 import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
-import multiprocessing as mp
+import multiprocess as mp
 
 
 # Simulation of trajectories and storage of trajectory data
