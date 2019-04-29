@@ -8,7 +8,8 @@ diffusive_distinguishability
         :alt: Documentation Status
 
 
-Simulation of homogeneous diffusion, bayesian estimation of underlying diffusion constant and analysis of distinguishability between diffusivities
+Simulation of homogeneous diffusion, bayesian estimation of underlying diffusion constant and analysis of distinguishability between diffusivities (ndim_homogeneous_distinguishability.py in diffusive_distinguisbaility)
+Jupyter notebook providing examples of how to interact with submodules of above .py, and example analysis (ndim_diffusion_analysis_tutorial.ipynb)
 
 
 * Free software: Allen Institute Software License
