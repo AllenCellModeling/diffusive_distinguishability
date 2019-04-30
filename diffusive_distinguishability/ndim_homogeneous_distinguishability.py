@@ -5,8 +5,7 @@ import scipy.special
 import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
-import multiprocess as mp
-
+from concurrent.futures import ProcessPoolExecutor
 
 # Simulation of trajectories and storage of trajectory data
 
@@ -130,9 +129,8 @@ def get_posterior_set(n_dim, d_const, n_steps, dt, n_reps, loc_std=0):
     shape parameters for inverse gamma posteriors for n_reps diffusive trajectories
     """
     
-    n_cpus = mp.cpu_count()
-    with mp.Pool(n_cpus-2) as pool:
-        results = pool.starmap(generate_posterior, [(n_dim, d_const, n_steps, dt, loc_std) for _n in range(n_reps)])
+    with ProcessPoolExecutor() as exe:
+        results = list(exe.map(generate_posterior, *zip(*((n_dim, d_const, n_steps, dt, loc_std) for _n in range(n_reps)))))
     alphas = [result[0] for result in results]
     betas = [result[1] for result in results]
     
@@ -298,20 +296,19 @@ def show_error_hist(n_dim, p_error):
     plt.show()
     
     
-def get_single_error(args):
+def get_single_error(dim, d_const, n_steps, dt, n, loc_std):
     """
-    Unpack args to generate single posterior, and calculate percent error of posterior mean relative to the true value.
+    Generate single posterior and calculate percent error of posterior mean relative to the true value.
 
-    :param args: set of parameters listed below, all packaged as one object for the sake of parallel processing
-    dim: number of spatial dimensions
-    d_const: diffusion constant (um2/s) whose estimator error we want to calculate
-    n_steps: trajectory length (number of steps)
-    dt: timestep size (s)
-    n: trajectory number
-    loc_std: standard deviation of localization error (um)
+    :param dim: number of spatial dimensions
+    :param d_const: diffusion constant (um2/s) whose estimator error we want to calculate
+    :param n_steps: trajectory length (number of steps)
+    :param dt: timestep size (s)
+    :param n: trajectory number
+    :param loc_std: standard deviation of localization error (um)
     :return: percent error for a single posterior mean relative to true value
     """
-    dim, d_const, n_steps, dt, n, loc_std = args
+
     alpha, beta = generate_posterior(dim, d_const, n_steps, dt, loc_std)
     post_mean = scipy.stats.distributions.invgamma(alpha, scale=beta).mean()
     return 100*((post_mean - d_const)/d_const)
@@ -333,14 +330,10 @@ def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0):
     number of dimensions
     """
 
-    n_cpus = mp.cpu_count()
     p_error = []
     for dim in n_dim:
-        input_args = []
-        for n in range(n_reps):
-            input_args.append((dim, d_const, n_steps, dt, n, loc_std))
-        with mp.Pool(n_cpus-2) as pool:
-            results = pool.map(get_single_error, input_args)
+        with ProcessPoolExecutor() as exe:
+            results = list(exe.map(get_single_error, *zip(*((dim, d_const, n_steps, dt, n, loc_std) for n in range(n_reps)))))
         p_error.append(results)
         
     # uncomment below to save error results as .npy
