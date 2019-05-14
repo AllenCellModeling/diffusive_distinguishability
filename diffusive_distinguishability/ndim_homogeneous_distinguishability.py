@@ -402,7 +402,7 @@ def get_ticks(tick_values, n_round, n_ticks):
     return ticks
 
 
-def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_lab):
+def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_lab, title):
     """
     Plot two df heatmaps as two subplots of one figure. They share x and y axis labels but have differing titles.
 
@@ -427,3 +427,5 @@ def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_l
     sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title2}, ax=axs[1], cmap='viridis')
     axs[1].set(xlabel=x_lab, ylabel=y_lab, title=title2)
     axs[1].invert_yaxis()
+    
+    plt.savefig(title)
