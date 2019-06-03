@@ -337,7 +337,7 @@ def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0):
         p_error.append(results)
         
     # uncomment below to save error results as .npy
-    # np.save('std_'+str(loc_std), p_error)
+    #np.save('std_'+str(loc_std), p_error)
     
     # display histogram of percent errors for n_reps runs of simulation with diffusion constant d_const
     if show_plot:
