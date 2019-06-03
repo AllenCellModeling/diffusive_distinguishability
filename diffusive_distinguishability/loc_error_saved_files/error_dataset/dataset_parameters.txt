@@ -1,0 +1,13 @@
+This is a list of the parameters used to generate the data in this dataset.
+
+# Diffusion constant
+D = 0.1
+
+# List of trajectory lengths
+trajectory lengths = [10, 15, 20, 25, 35, 50, 100, 150, 200, 500]
+
+# Timestep size
+dt = 1
+
+# Number reps averaged to get result for each parameter set
+n_reps = 10**4
