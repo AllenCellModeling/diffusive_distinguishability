@@ -402,7 +402,7 @@ def get_ticks(tick_values, n_round, n_ticks):
     return ticks
 
 
-def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_lab, title, vmax1=None, vmax2=None):
+def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_lab, title=None, vmax1=None, vmax2=None):
     """
     Plot two df heatmaps as two subplots of one figure. They share x and y axis labels but have differing titles.
 
@@ -428,9 +428,9 @@ def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_l
     axs[0].invert_yaxis()
     
     if vmax2 is None:
-        sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[0], cmap='viridis')
+        sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[1], cmap='viridis')
     else:
-        sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[0], cmap='viridis', vmax = vmax2)
+        sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[1], cmap='viridis', vmax = vmax2)
     axs[1].set(xlabel=x_lab, ylabel=y_lab, title=title2)
     axs[1].invert_yaxis()
     
