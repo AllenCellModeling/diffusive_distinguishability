@@ -6,6 +6,8 @@ diffusive_distinguishability
 .. image:: https://readthedocs.org/projects/diffusive-distinguishability/badge/?version=latest
         :target: https://diffusive-distinguishability.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
+.. image:: https://zenodo.org/badge/183488372.svg
+   :target: https://zenodo.org/badge/latestdoi/183488372
 
 
 Simulation of homogeneous diffusion, bayesian estimation of underlying diffusion constant and analysis of distinguishability between diffusivities 
