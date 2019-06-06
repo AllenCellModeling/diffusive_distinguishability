@@ -402,7 +402,7 @@ def get_ticks(tick_values, n_round, n_ticks):
     return ticks
 
 
-def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_lab, title):
+def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_lab, title=None, vmax1=None, vmax2=None):
     """
     Plot two df heatmaps as two subplots of one figure. They share x and y axis labels but have differing titles.
 
@@ -415,17 +415,30 @@ def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_l
     :param title2: plot title for left (df2) panel
     :param x_lab: x axis label
     :param y_lab: y axis label
+    :param title: filename to save figure as; its existence acts as a flag for saving/not saving this figure
+    :param vmax1: cmap max cutoff value for df1
+    :param vmax2: cmap max cutoff value for df2
     """
     # set y ticks: round and only display some to improve readability
     y_ticks = get_ticks(df1.index.values, n_round, n_ticks)
     fig, axs = plt.subplots(1, 2, figsize=(2*size, size))
     
-    sns.heatmap(df1, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[0], cmap='viridis')
+    # plot first df as heatmap, using a cmap cutoff value if provided
+    if vmax1 is None:
+        sns.heatmap(df1, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[0], cmap='viridis')
+    else:
+        sns.heatmap(df1, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[0], cmap='viridis', vmax = vmax1)
     axs[0].set(xlabel=x_lab, ylabel=y_lab, title=title1)
     axs[0].invert_yaxis()
     
-    sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title2}, ax=axs[1], cmap='viridis')
+    # plot second df as heatmap, using a cmap cutoff value if provided
+    if vmax2 is None:
+        sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[1], cmap='viridis')
+    else:
+        sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[1], cmap='viridis', vmax = vmax2)
     axs[1].set(xlabel=x_lab, ylabel=y_lab, title=title2)
     axs[1].invert_yaxis()
     
-    plt.savefig(title)
+    # if a filename is provided, save the figure with this filename; otherwise do not save
+    if title is not None:
+        plt.savefig(title)

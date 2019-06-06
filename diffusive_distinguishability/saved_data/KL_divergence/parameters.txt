@@ -1,0 +1,25 @@
+Parameters used in the calculation of stored KL divergence data in pickled dataframe
+
+#Trajectory lengths
+[5, 25, 50, 100, 200, 500, 1000]
+
+#timestep 
+dt = 1
+
+# number of reps for each parameter set, averaged to get each entry in the df
+n_reps = 10**3
+
+# set diffusion constant
+d_const1 = 0.01
+
+# diffusion constant multipliers to sweep through (D2 = mult*D1)
+#for the linear scaling:
+Mmin = 1.0       # lowest multiplier
+Mmax = 10.       # highest multiplier
+numM = 30        # number of multipliers to bin the range into
+mult_list = np.linspace(Mmin, Mmax, numM)
+#for the log scaling:
+Mmin = 1.0       # lowest multiplier
+Mmax = 10.       # highest multiplier
+numM = 30        # number of multipliers to bin the range into
+mult_list = np.logspace(np.log10(Mmin), np.log10(Mmax), numM)
