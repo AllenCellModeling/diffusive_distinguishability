@@ -24,9 +24,9 @@ The python package ``ndim_homogeneous_distinguishability.py`` contains the meat 
 
 This repo also includes:
 
-1. Examples of how to use these functions, as well as some of our own analysis of diffusivity distinguishability, provided in a Jupyter notebook (``ndim_diffusion_analysis_tutorial.ipynb``). This includes the function calls used to generate some ``results/`` figures in our manuscript
+1. Examples of how to use these functions, as well as some of our own analysis of diffusivity distinguishability, provided in a Jupyter notebook (``ndim_diffusion_analysis_tutorial.ipynb``). This includes the function calls used to generate some ``"Results"`` figures in our manuscript
 2. A Jupyter notebook (``figure_production.ipynb``) used to generate the remainder of our computationally derived manuscript figures, provided for reproducibility
-3. Some example pre-calculated datasets (in the form of pickled dataframes), generated in our Jupyter notebook example analyses described above. These can be found in the directory ``saved_data``, along with text files specifying the parameters used in their generation
+3. Some example pre-calculated datasets (in the form of pickled dataframes), generated in our Jupyter notebook example analyses described above. These can be found in the directory ``saved_data/``, along with text files specifying the parameters used in their generation
 4. A Jupyter notebook containing a toy model quantifying the relative impact of localization error on diffusion estimates conditional on number of spatial dimensions (``test_overestimation.ipynb``)
 5. A directroy (``figures/``) storing all of our computationally derived manuscript figured, stored as image files
 
