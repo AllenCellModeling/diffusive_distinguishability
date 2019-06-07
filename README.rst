@@ -35,9 +35,9 @@ This repo also includes:
 
 * Documentation: https://diffusive-distinguishability.readthedocs.io.
 
-* Installation: PyPI installation not available at this time, please install using git.
+Installation: PyPI installation not available at this time, please install using git.
 
-pip install git+https://github.com/AllenCellModeling/diffusive_distinguishability.git
+'pip install git+https://github.com/AllenCellModeling/diffusive_distinguishability.git'
 
 
 Support
