@@ -30,14 +30,17 @@ This repo also includes:
 4. A Jupyter notebook containing a toy model quantifying the relative impact of localization error on diffusion estimates conditional on number of spatial dimensions (``test_overestimation.ipynb``)
 5. A directroy (``figures/``) storing all of our computationally derived manuscript figured, stored as image files
 
+Installation:
+
+PyPI installation not available at this time, please install using git.
+``pip install git+https://github.com/AllenCellModeling/diffusive_distinguishability.git``
+
 
 * Free software: Allen Institute Software License
 
 * Documentation: https://diffusive-distinguishability.readthedocs.io.
 
-Installation: PyPI installation not available at this time, please install using git.
 
-``pip install git+https://github.com/AllenCellModeling/diffusive_distinguishability.git``
 
 
 Support
