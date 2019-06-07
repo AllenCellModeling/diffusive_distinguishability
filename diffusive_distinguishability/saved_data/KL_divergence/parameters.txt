@@ -12,13 +12,14 @@ n_reps = 10**3
 # set diffusion constant
 d_const1 = 0.01
 
-# diffusion constant multipliers to sweep through (D2 = mult*D1)
+# diffusion constant multipliers to sweep through (D2 = mult*D1) for linear scaling ('KL_lin.pickle)':
 #for the linear scaling:
 Mmin = 1.0       # lowest multiplier
 Mmax = 10.       # highest multiplier
 numM = 30        # number of multipliers to bin the range into
 mult_list = np.linspace(Mmin, Mmax, numM)
-#for the log scaling:
+
+# diffusion constant multipliers to sweep through (D2 = mult*D1) for log10 scaling ('KL_log.pickle)':
 Mmin = 1.0       # lowest multiplier
 Mmax = 10.       # highest multiplier
 numM = 30        # number of multipliers to bin the range into

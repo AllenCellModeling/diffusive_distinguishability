@@ -1,12 +1,18 @@
+Contents:
 This directory contains pre-calculated results, so that the user doesn't need to re-run analysis which takes a long time to run.
+Each pickled file is a dataframe, containing the average percent posterior error (posterior distribution mode relative to true diffusivity value) conditional on the number of timesteps used to generate the trajectory and the amount of localization error.
 
-Each file is saved as a pickled Pandas dataframe. The filenaming scheme is DE-X_dY.pickle, where DE-X indicates that the diffusion constant is 10^(-X) and dY indicates that there are Y spatial dimensions that the trajectory explores.
+Naming scheme:
+Each directory contains three pickled dataframes, each containing the dataframe for trajectories simulated in 1, 2, or 3 spatial dimensions. All datasets in each directory are generated with a common diffusivity (D), where the directory name 'DE-X' indicates that the diffusion constant is 10^(-X) um^2/s. Each file is saved as a pickled Pandas dataframe. The filenaming scheme is DE-X_dY.pickle, where DE-X indicates that the diffusion constant is 10^(-X) um^2/s and dY indicates that there are Y spatial dimensions used.
 
-Package used to generate these dataframes: ndim_homogeneous_distinguishability.py/
+Generating datasets:
+Package used to generate these dataframes: ndim_homogeneous_distinguishability.py
 Function used to generate these dataframes: error_sensitivity
-Dataframes can be pickled/unpickled using:
-df.to_pickle(filepath)
-pd.read_pickle(filepath)
 
+Pickling/unpickling Pandas dataframes:
+Dataframes can be pickled using: df.to_pickle('filepath/filename')
+Pandas (pd) can be used unpickle using: pd.read_pickle('filepath/filename')
+
+Parameters:
 Parameters used to generate these files are listed in a .txt file for each subdirectroy of this directroy.
 
