@@ -10,7 +10,7 @@ diffusive_distinguishability
    :target: https://zenodo.org/badge/latestdoi/183488372
 
 
-Simulation of homogeneous diffusion, bayesian estimation of underlying diffusion constant and analysis of distinguishability between diffusivities 
+Simulation of homogeneous isotropic diffusion, bayesian estimation of underlying diffusion constant and analysis of distinguishability between diffusivities 
 
 
 Getting Started
@@ -18,13 +18,17 @@ Getting Started
 
 The python package ``ndim_homogeneous_distinguishability.py`` contains the meat of this project, as a set of functions which can be used to:
 
-1. Simulate diffusive trajectories (pure diffusion with a homogeneous diffusion constant)
+1. Simulate diffusive trajectories (diffusion with a homogeneous isotropic diffusion constant)
 2. Use Bayesian inference to estimate the diffusion constant used to generate a trajectory by producing a posterior diffusivity distribution
 3. Analyze the dependence of diffusivity estimation error, and the ability to distinguish between trajectories with differing diffusivities, conditional on model parameters
 
-Examples of how to use these functions, as well as some of our own analysis of diffusivity distinguishability, are provided in the Jupyter notebook ``ndim_diffusion_analysis_tutorial.ipynb``.
+This repo also includes:
 
-Also included are some stored pre-calculated numpy arrays used in the provided Jupyter notebook example analysis (in the directory ``loc_error_saved_files``) and another Jupyter notebook containing a toy model quantifying the relative impact of localization error on diffusion estimates conditional on number of spatial dimensions (``test_overestimation.ipynb``). 
+1. Examples of how to use these functions, as well as some of our own analysis of diffusivity distinguishability, provided in the Jupyter notebook ``ndim_diffusion_analysis_tutorial.ipynb``. This includes the function calls used to generate some ``results`` figures in our manuscript.
+2. A Jupyter notebook (``figure_production.ipynb``) used to generate the remainder of our computationally derived manuscript figures, provided for reproducibility.
+2. Some example pre-calculated datasets (in the form of pickled dataframes), generated in our Jupyter notebook example analyses described above. These can be found in the directory ``saved_data``, along with text files specifying the parameters used in their generation.
+3. A Jupyter notebook containing a toy model quantifying the relative impact of localization error on diffusion estimates conditional on number of spatial dimensions (``test_overestimation.ipynb``).
+4. A directroy (``figures``) storing all of our computationally derived manuscript figured, stored as image files.
 
 
 * Free software: Allen Institute Software License
