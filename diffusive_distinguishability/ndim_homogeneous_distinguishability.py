@@ -441,4 +441,4 @@ def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_l
     
     # if a filename is provided, save the figure with this filename; otherwise do not save
     if title is not None:
-        plt.savefig(title)
+        plt.savefig(title, format='pdf')
