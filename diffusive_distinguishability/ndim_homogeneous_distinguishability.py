@@ -296,7 +296,7 @@ def show_error_hist(n_dim, p_error):
     plt.show()
     
     
-def get_single_error(dim, d_const, n_steps, dt, n, loc_std):
+def get_single_error(dim, d_const, n_steps, dt, n, loc_std, mag=None):
     """
     Generate single posterior and calculate percent error of posterior mean relative to the true value.
 
@@ -311,10 +311,13 @@ def get_single_error(dim, d_const, n_steps, dt, n, loc_std):
 
     alpha, beta = generate_posterior(dim, d_const, n_steps, dt, loc_std)
     post_mean = scipy.stats.distributions.invgamma(alpha, scale=beta).mean()
+    error = 100*((post_mean - d_const)/d_const)
+    if mag is not None and mag:
+        error = np.abs(error)
     return 100*((post_mean - d_const)/d_const)
     
     
-def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0):
+def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0, mag=None):
     """
     Given a diffusion constant, get the posterior for a trajectory of length n_steps and timestep dt. Repeat n_reps
     times and report/plot hist of the percent error of the mean posterior values vs true diffusivity values.
@@ -333,7 +336,7 @@ def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0):
     p_error = []
     for dim in n_dim:
         with ProcessPoolExecutor() as exe:
-            results = list(exe.map(get_single_error, *zip(*((dim, d_const, n_steps, dt, n, loc_std) for n in range(n_reps)))))
+            results = list(exe.map(get_single_error, *zip(*((dim, d_const, n_steps, dt, n, loc_std, mag) for n in range(n_reps)))))
         p_error.append(results)
         
     # uncomment below to save error results as .npy
@@ -346,7 +349,7 @@ def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0):
     return p_error
 
 
-def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std):
+def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std, mag=None):
     """
     Look at how the mean and median percent error of the posterior mean relative to the true value
     depend on the trajectory length used to generate posteriors and number of reps we run.
@@ -369,7 +372,7 @@ def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std):
     data3 = np.zeros((len(n_steps_list), len(loc_std)))
     for n_steps in n_steps_list:
         for std in loc_std:
-            p_error = get_dim_error([1, 2, 3], d_const, n_steps, dt, n_reps, False, std)
+            p_error = get_dim_error([1, 2, 3], d_const, n_steps, dt, n_reps, False, std, mag)
             ind_steps, ind_error = np.asarray(n_steps_list).searchsorted(n_steps), np.asarray(loc_std).searchsorted(std)
             data1[ind_steps, ind_error] = np.mean(p_error[0])
             data2[ind_steps, ind_error] = np.mean(p_error[1])
