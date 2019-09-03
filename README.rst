@@ -10,7 +10,8 @@ diffusive_distinguishability
    :target: https://zenodo.org/badge/latestdoi/183488372
 
 
-Simulation of homogeneous isotropic diffusion, bayesian estimation of underlying diffusion constant and analysis of distinguishability between diffusivities 
+Simulation of homogeneous isotropic diffusion, bayesian estimation of underlying diffusion constant and analysis of distinguishability between diffusivities. The manuscript associated with this work is available on Biorxiv at the following link:
+https://www.biorxiv.org/content/10.1101/740175v1
 
 
 Getting Started
