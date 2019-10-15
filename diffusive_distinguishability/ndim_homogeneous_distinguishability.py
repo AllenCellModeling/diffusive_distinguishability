@@ -6,8 +6,44 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
 from concurrent.futures import ProcessPoolExecutor
+from fbm import FBM
 
 # Simulation of trajectories and storage of trajectory data
+
+def simulate_fbm_df(n_dim, hurst, n_steps, dt, loc_std):
+
+    f = FBM(n = n_steps, hurst=hurst, length = n_steps*dt, method='daviesharte')
+    t_values = f.times()
+    
+    fbm_sim = []
+    for dim in range(n_dim):
+        fbm_sim.append(f.fbm())
+        
+    # initialize position at origin
+    x0 = np.zeros(n_dim)
+    x = x0
+    x_obs = [sum(i) for i in zip(x, [loc_std*np.random.randn() for _dim in range(n_dim)])]
+    df = pd.DataFrame()
+    
+    # at each time-step, stochastically select step size in each dimension to find new location to add to trajectory
+    for i in range(n_steps):
+        
+        t = t_values[i]
+        dx = [fbm_sim[j][i+1] for j in range(n_dim)]
+        noise = [loc_std*np.random.randn() for _dim in range(n_dim)]
+        
+        x_new = [sum(i) for i in zip(x, dx)]
+        x_obs_new = [sum(i) for i in zip(x_new, noise)]
+        dx_obs = [sum(i) for i in zip(x_obs_new, np.negative(x_obs))]
+        dr = np.linalg.norm(dx)
+        dr_obs = np.linalg.norm(dx_obs)
+        
+        data = {'t_step': t, 'x': x, 'x_obs': x_obs, 'dx': dx, 'dx_obs': dx_obs, 'dr': dr, 'dr_obs': dr_obs}
+        df = df.append(data, ignore_index=True)
+        x = x_new
+        x_obs = x_obs_new
+        
+    return df
 
 
 def simulate_diffusion_df(n_dim, d_const, n_steps, dt, loc_std=0):
