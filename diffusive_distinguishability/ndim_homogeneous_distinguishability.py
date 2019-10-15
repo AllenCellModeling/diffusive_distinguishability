@@ -10,6 +10,45 @@ from fbm import FBM
 
 # Simulation of trajectories and storage of trajectory data
 
+def simulate_diffusion_df(n_dim, d_const, n_steps, dt, loc_std=0):
+    """Simulate and output a single trajectory of homogeneous diffusion in a specified number of dimensions.
+
+    :param n_dim: number of spatial dimensions for simulation (1, 2, or 3)
+    :param d_const: diffusion constant (um2/s)
+    :param n_steps: trajectory length (number of steps)
+    :param dt: timestep size (s)
+    :param loc_std: standard deviation for Gaussian localization error (um)
+    :return: trajectory dataframe (position in n_dim dimensions, at each timepoint)
+    """
+
+    np.random.seed()
+
+    # initialize position at origin
+    x0 = np.zeros(n_dim)
+    x = x0
+    x_obs = [sum(i) for i in zip(x, [loc_std*np.random.randn() for _dim in range(n_dim)])]
+    df = pd.DataFrame()
+    
+    # at each time-step, stochastically select step size in each dimension to find new location to add to trajectory
+    for t in np.linspace(0, (n_steps-1)*dt, n_steps):
+        
+        dx = [np.sqrt(2*d_const*dt)*np.random.randn() for _dim in range(n_dim)]
+        noise = [loc_std*np.random.randn() for _dim in range(n_dim)]
+        
+        x_new = [sum(i) for i in zip(x, dx)]
+        x_obs_new = [sum(i) for i in zip(x_new, noise)]
+        dx_obs = [sum(i) for i in zip(x_obs_new, np.negative(x_obs))]
+        dr = np.linalg.norm(dx)
+        dr_obs = np.linalg.norm(dx_obs)
+        
+        data = {'t_step': t, 'x': x, 'x_obs': x_obs, 'dx': dx, 'dx_obs': dx_obs, 'dr': dr, 'dr_obs': dr_obs}
+        df = df.append(data, ignore_index=True)
+        x = x_new
+        x_obs = x_obs_new
+        
+    return df
+
+
 def simulate_fbm_df(n_dim, hurst, n_steps, dt, loc_std):
     """Simulate and output a single trajectory of fractional brownian motion in a specified number of dimensions.
 
@@ -55,43 +94,14 @@ def simulate_fbm_df(n_dim, hurst, n_steps, dt, loc_std):
     return df
 
 
-def simulate_diffusion_df(n_dim, d_const, n_steps, dt, loc_std=0):
-    """Simulate and output a single trajectory of homogeneous diffusion in a specified number of dimensions.
-
-    :param n_dim: number of spatial dimensions for simulation (1, 2, or 3)
-    :param d_const: diffusion constant (um2/s)
-    :param n_steps: trajectory length (number of steps)
-    :param dt: timestep size (s)
-    :param loc_std: standard deviation for Gaussian localization error (um)
-    :return: trajectory dataframe (position in n_dim dimensions, at each timepoint)
+def get_fBm_diffusivity(df, dt):
+    """Get effective diffusion constant for a given timescale from fBm
+    :param df: dataframe
+    :param dt: timescale for diffusivity measurement
+    :return: diffusivity(dt)
     """
-
-    np.random.seed()
-
-    # initialize position at origin
-    x0 = np.zeros(n_dim)
-    x = x0
-    x_obs = [sum(i) for i in zip(x, [loc_std*np.random.randn() for _dim in range(n_dim)])]
-    df = pd.DataFrame()
     
-    # at each time-step, stochastically select step size in each dimension to find new location to add to trajectory
-    for t in np.linspace(0, (n_steps-1)*dt, n_steps):
-        
-        dx = [np.sqrt(2*d_const*dt)*np.random.randn() for _dim in range(n_dim)]
-        noise = [loc_std*np.random.randn() for _dim in range(n_dim)]
-        
-        x_new = [sum(i) for i in zip(x, dx)]
-        x_obs_new = [sum(i) for i in zip(x_new, noise)]
-        dx_obs = [sum(i) for i in zip(x_obs_new, np.negative(x_obs))]
-        dr = np.linalg.norm(dx)
-        dr_obs = np.linalg.norm(dx_obs)
-        
-        data = {'t_step': t, 'x': x, 'x_obs': x_obs, 'dx': dx, 'dx_obs': dx_obs, 'dr': dr, 'dr_obs': dr_obs}
-        df = df.append(data, ignore_index=True)
-        x = x_new
-        x_obs = x_obs_new
-        
-    return df
+    return (df['dr_obs']**2)*(hurst/n_dim)*(dt**(2*hurst-1))
 
 
 def trajectory_df_from_data(trajectory):
