@@ -11,6 +11,15 @@ from fbm import FBM
 # Simulation of trajectories and storage of trajectory data
 
 def simulate_fbm_df(n_dim, hurst, n_steps, dt, loc_std):
+    """Simulate and output a single trajectory of fractional brownian motion in a specified number of dimensions.
+
+    :param n_dim: number of spatial dimensions for simulation (1, 2, or 3)
+    :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
+    :param n_steps: trajectory length (number of steps)
+    :param dt: timestep size (s)
+    :param loc_std: standard deviation for Gaussian localization error (um)
+    :return: trajectory dataframe (position in n_dim dimensions, at each timepoint)
+    """
 
     f = FBM(n = n_steps, hurst=hurst, length = n_steps*dt, method='daviesharte')
     t_values = f.times()
