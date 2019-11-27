@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import seaborn as sb
 import ndim_homogeneous_distinguishability as hd
 
 
@@ -10,25 +11,25 @@ def hurst_dcoeff(n_dim=2, n_steps=30, hurst=0.2, dt=1, loc_std=0):
     return mean
 
 
-def scan_parameters(n_dim = [1,2,3], n_steps = [5, 10, 50, 100, 500], hurst_list = np.linspace(0.1,0.8,50), n_reps = 10):
+def scan_parameters(n_reps = 1, n_dim = [1,2,3], n_steps = [5, 10, 50, 100, 500], hurst_list = np.linspace(0.1,0.8,50)):
     results = list()
     for dim in n_dim:
         for steps in n_steps:
             for hurst in hurst_list:
                 replicates = [hurst_dcoeff(dim, steps, hurst) for i in range(n_reps)]
-                rep_df = pd.DataFrame({'n_dim':[n_dim], 'n_steps':[n_steps], 'hurst': [hurst], 'd_coeff': [np.mean(replicates)]})
+                rep_df = pd.DataFrame({'n_dim':[dim], 'n_steps':[steps], 'hurst': [hurst], 'd_coeff': [np.mean(replicates)]})
                 results.append(rep_df)
     df = pd.concat(results)
-    df.to_pickle('hurst_dcoeff_results')
+    df.to_pickle('hurst_dcoeff_results_n'+str(n_reps))
 
 
-def plot_hurst_dcoeff(df, cut=None):
+def plot_hurst_dcoeff(results, cut=None):
     if cut is None:
         df = results
     else:
         df = results[results['hurst'] < cut]
     palette = dict(zip(df.n_steps.unique(), sb.color_palette("rocket_r", 5)))
-    sb.relplot(x="hurst", y="mean",
+    sb.relplot(x="hurst", y="d_coeff",
             hue="n_steps", size="n_dim", palette=palette,
             height=8, aspect=1, facet_kws=dict(sharex=False),
             kind="line", legend="full", data=df)
