@@ -5,8 +5,9 @@ import scipy.special
 import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
+import fbm_analysis as fa
 from concurrent.futures import ProcessPoolExecutor
-from fbm import FBM
+
 
 # Simulation of trajectories and storage of trajectory data
 
@@ -47,61 +48,6 @@ def simulate_diffusion_df(n_dim, d_const, n_steps, dt, loc_std=0):
         x_obs = x_obs_new
         
     return df
-
-
-def simulate_fbm_df(n_dim, hurst, n_steps, dt, loc_std):
-    """Simulate and output a single trajectory of fractional brownian motion in a specified number of dimensions.
-
-    :param n_dim: number of spatial dimensions for simulation (1, 2, or 3)
-    :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
-    :param n_steps: trajectory length (number of steps)
-    :param dt: timestep size (s)
-    :param loc_std: standard deviation for Gaussian localization error (um)
-    :return: trajectory dataframe (position in n_dim dimensions, at each timepoint)
-    """
-
-    f = FBM(n = n_steps, hurst=hurst, length = n_steps*dt, method='daviesharte')
-    t_values = f.times()
-    
-    fbm_sim = []
-    for dim in range(n_dim):
-        fbm_sim.append(f.fbm())
-        
-    # initialize position at origin
-    x0 = np.zeros(n_dim)
-    x = x0
-    x_obs = [sum(i) for i in zip(x, [loc_std*np.random.randn() for _dim in range(n_dim)])]
-    df = pd.DataFrame()
-    
-    # at each time-step, stochastically select step size in each dimension to find new location to add to trajectory
-    for i in range(n_steps):
-        
-        t = t_values[i]
-        dx = [fbm_sim[j][i+1] for j in range(n_dim)]
-        noise = [loc_std*np.random.randn() for _dim in range(n_dim)]
-        
-        x_new = [sum(i) for i in zip(x, dx)]
-        x_obs_new = [sum(i) for i in zip(x_new, noise)]
-        dx_obs = [sum(i) for i in zip(x_obs_new, np.negative(x_obs))]
-        dr = np.linalg.norm(dx)
-        dr_obs = np.linalg.norm(dx_obs)
-        
-        data = {'t_step': t, 'x': x, 'x_obs': x_obs, 'dx': dx, 'dx_obs': dx_obs, 'dr': dr, 'dr_obs': dr_obs}
-        df = df.append(data, ignore_index=True)
-        x = x_new
-        x_obs = x_obs_new
-        
-    return df
-
-
-def get_fBm_diffusivity(df, dt):
-    """Get effective diffusion constant for a given timescale from fBm
-    :param df: dataframe
-    :param dt: timescale for diffusivity measurement
-    :return: diffusivity(dt)
-    """
-    
-    return (df['dr_obs']**2)*(hurst/n_dim)*(dt**(2*hurst-1))
 
 
 def trajectory_df_from_data(trajectory):
@@ -146,7 +92,7 @@ def estimate_diffusion(n_dim, dt, dr, prior=scipy.stats.distributions.invgamma(0
     return scipy.stats.distributions.invgamma(alpha0+alpha, scale=beta0+beta), alpha0+alpha, beta0+beta
 
     
-def generate_posterior(n_dim, d_const, n_steps, dt, loc_std=0):
+def generate_posterior(n_dim, d_const, n_steps, dt, loc_std=0, hurst=None):
     """
     Simulate a single trajectory and find the diffusion constant posterior (inverse gamma) distribution.
 
@@ -159,7 +105,10 @@ def generate_posterior(n_dim, d_const, n_steps, dt, loc_std=0):
     """
     
     # get dataframe of (x, dx) for a trajectory of length n_steps in homogeneous diffusion constant d_const
-    df = simulate_diffusion_df(n_dim, d_const, n_steps, dt, loc_std)
+    if hurst is None:
+        df = simulate_diffusion_df(n_dim, d_const, n_steps, dt, loc_std)
+    else:
+        df = fa.simulate_fbm_df(d_const, n_dim, n_steps, dt, loc_std, hurst)
     
     # estimate posterior diffusion constant distribution using prior/posterior with inverse gamma form
     prior = scipy.stats.distributions.invgamma(0, scale=0)
@@ -169,7 +118,7 @@ def generate_posterior(n_dim, d_const, n_steps, dt, loc_std=0):
     return alpha, beta
 
 
-def get_posterior_set(n_dim, d_const, n_steps, dt, n_reps, loc_std=0):
+def get_posterior_set(n_dim, d_const, n_steps, dt, n_reps, loc_std=0, hurst=None):
     """
     Repeat analysis generating a posterior diffusion constant distribution per trajectory for multiple trajectories and
     return (1) full set and (2) median values of distribution fit parameters.
@@ -185,7 +134,7 @@ def get_posterior_set(n_dim, d_const, n_steps, dt, n_reps, loc_std=0):
     """
     
     with ProcessPoolExecutor() as exe:
-        results = list(exe.map(generate_posterior, *zip(*((n_dim, d_const, n_steps, dt, loc_std) for _n in range(n_reps)))))
+        results = list(exe.map(generate_posterior, *zip(*((n_dim, d_const, n_steps, dt, loc_std, hurst) for _n in range(n_reps)))))
     alphas = [result[0] for result in results]
     betas = [result[1] for result in results]
     
@@ -234,7 +183,7 @@ def invgamma_kldiv(param1, param2):
 # Visualization and analyses
 
 
-def compare2(n_dim, d_const1, mult, n_steps, dt, n_reps, loc_std=0):
+def compare2(n_dim, d_const1, mult, n_steps, dt, n_reps, loc_std=0, hurst=None):
     """
     For one pair of diffusion constants (d_const, d_const*mult) get KL divergence of their posteriors, where the
     posteriors are generated from an alpha and beta which are the median values from repeating posterior estimation
@@ -252,8 +201,8 @@ def compare2(n_dim, d_const1, mult, n_steps, dt, n_reps, loc_std=0):
     d_const2 = d_const1*mult
 
     # for n_reps trajectories of length n_steps, get median values for posterior parameters and their std
-    alpha1, beta1, alphas1, betas1 = get_posterior_set(n_dim, d_const1, n_steps, dt, n_reps, loc_std)
-    alpha2, beta2, alphas2, betas2 = get_posterior_set(n_dim, d_const2, n_steps, dt, n_reps, loc_std)
+    alpha1, beta1, alphas1, betas1 = get_posterior_set(n_dim, d_const1, n_steps, dt, n_reps, loc_std, hurst)
+    alpha2, beta2, alphas2, betas2 = get_posterior_set(n_dim, d_const2, n_steps, dt, n_reps, loc_std, hurst)
     
     # plot both posteriors
     xx = np.linspace(0, 1.5*d_const2, 50)
@@ -271,7 +220,7 @@ def compare2(n_dim, d_const1, mult, n_steps, dt, n_reps, loc_std=0):
     print('Inverse: ' + str(1./kl_div))
 
     
-def fill_heatmap_gen(n_dim, d_const, mult_list, n_steps, dt, n_reps, loc_std=0):
+def fill_heatmap_gen(n_dim, d_const, mult_list, n_steps, dt, n_reps, loc_std=0, hurst=None):
     """
     Generate a heatmap of KL divergence values for pairwise comparison of diffusion constant posterior
     distributions. Compared posteriors are generated by scanning through pairings of [d_const, mult*d_const] where mult
@@ -319,8 +268,8 @@ def fill_heatmap_gen(n_dim, d_const, mult_list, n_steps, dt, n_reps, loc_std=0):
             loc_std = params[3]
             
             # calculate posterior fit params and their std's
-            alpha1_med, beta1_med, alphas1, betas1 = get_posterior_set(n_dim, d_const1, n_steps, dt, n_reps, loc_std)
-            alpha2_med, beta2_med, alphas2, betas2 = get_posterior_set(n_dim, d_const2, n_steps, dt, n_reps, loc_std)
+            alpha1_med, beta1_med, alphas1, betas1 = get_posterior_set(n_dim, d_const1, n_steps, dt, n_reps, loc_std, hurst)
+            alpha2_med, beta2_med, alphas2, betas2 = get_posterior_set(n_dim, d_const2, n_steps, dt, n_reps, loc_std, hurst)
             
             # store KL divergence of posteriors in dataframe
             df.iat[m_ind, x_ind] = invgamma_kldiv([alpha1_med, beta1_med], [alpha2_med, beta2_med])
@@ -351,7 +300,7 @@ def show_error_hist(n_dim, p_error):
     plt.show()
     
     
-def get_single_error(dim, d_const, n_steps, dt, n, loc_std, mag=None):
+def get_single_error(dim, d_const, n_steps, dt, n, loc_std, mag=None, hurst=None):
     """
     Generate single posterior and calculate percent error of posterior mean relative to the true value.
 
@@ -364,7 +313,7 @@ def get_single_error(dim, d_const, n_steps, dt, n, loc_std, mag=None):
     :return: percent error for a single posterior mean relative to true value
     """
 
-    alpha, beta = generate_posterior(dim, d_const, n_steps, dt, loc_std)
+    alpha, beta = generate_posterior(dim, d_const, n_steps, dt, loc_std, hurst)
     post_mean = scipy.stats.distributions.invgamma(alpha, scale=beta).mean()
     error = 100*((post_mean - d_const)/d_const)
     if mag is not None and mag:
@@ -372,7 +321,7 @@ def get_single_error(dim, d_const, n_steps, dt, n, loc_std, mag=None):
     return 100*((post_mean - d_const)/d_const)
     
     
-def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0, mag=None):
+def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0, mag=None, hurst=None):
     """
     Given a diffusion constant, get the posterior for a trajectory of length n_steps and timestep dt. Repeat n_reps
     times and report/plot hist of the percent error of the mean posterior values vs true diffusivity values.
@@ -391,7 +340,7 @@ def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0, mag
     p_error = []
     for dim in n_dim:
         with ProcessPoolExecutor() as exe:
-            results = list(exe.map(get_single_error, *zip(*((dim, d_const, n_steps, dt, n, loc_std, mag) for n in range(n_reps)))))
+            results = list(exe.map(get_single_error, *zip(*((dim, d_const, n_steps, dt, n, loc_std, mag, hurst) for n in range(n_reps)))))
         p_error.append(results)
         
     # uncomment below to save error results as .npy
@@ -404,7 +353,7 @@ def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0, mag
     return p_error
 
 
-def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std, mag=None):
+def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std, mag=None, hurst=None):
     """
     Look at how the mean and median percent error of the posterior mean relative to the true value
     depend on the trajectory length used to generate posteriors and number of reps we run.
@@ -427,7 +376,7 @@ def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std, mag=None):
     data3 = np.zeros((len(n_steps_list), len(loc_std)))
     for n_steps in n_steps_list:
         for std in loc_std:
-            p_error = get_dim_error([1, 2, 3], d_const, n_steps, dt, n_reps, False, std, mag)
+            p_error = get_dim_error([1, 2, 3], d_const, n_steps, dt, n_reps, False, std, mag, hurst)
             ind_steps, ind_error = np.asarray(n_steps_list).searchsorted(n_steps), np.asarray(loc_std).searchsorted(std)
             data1[ind_steps, ind_error] = np.mean(p_error[0])
             data2[ind_steps, ind_error] = np.mean(p_error[1])
