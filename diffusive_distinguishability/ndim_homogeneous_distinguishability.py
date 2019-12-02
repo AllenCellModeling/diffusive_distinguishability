@@ -101,6 +101,7 @@ def generate_posterior(n_dim, d_const, n_steps, dt, loc_std=0, hurst=None):
     :param n_steps: trajectory length (number of steps)
     :param dt: timestep size (s)
     :param loc_std: standard deviation for Gaussian localization error (um)
+    :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
     :return alpha, beta: scale and shape parameters for inverse gamma posterior for a diffusive trajectory
     """
     
@@ -129,6 +130,7 @@ def get_posterior_set(n_dim, d_const, n_steps, dt, n_reps, loc_std=0, hurst=None
     :param dt: timestep size (s)
     :param n_reps: number of trajectory replicates
     :param loc_std: standard deviation for Gaussian localization error (um)
+    :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
     :return alpha, beta, alpha_std, beta_std, alphas, betas: medians, std deviations and arrays of scale and
     shape parameters for inverse gamma posteriors for n_reps diffusive trajectories
     """
@@ -196,6 +198,7 @@ def compare2(n_dim, d_const1, mult, n_steps, dt, n_reps, loc_std=0, hurst=None):
     :param dt: timestep size (s)
     :param n_reps: number of trajectory replicates
     :param loc_std: standard deviation of localization error (um)
+    :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
     """
 
     d_const2 = d_const1*mult
@@ -239,6 +242,7 @@ def fill_heatmap_gen(n_dim, d_const, mult_list, n_steps, dt, n_reps, loc_std=0, 
     :param dt: timestep size (s)
     :param n_reps: number of trajectories
     :param loc_std: standard deviation of localization error (um)
+    :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
     :return df: dataframe containing the pairwise KL divergences
     """
     
@@ -310,6 +314,7 @@ def get_single_error(dim, d_const, n_steps, dt, n, loc_std, mag=None, hurst=None
     :param dt: timestep size (s)
     :param n: trajectory number
     :param loc_std: standard deviation of localization error (um)
+    :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
     :return: percent error for a single posterior mean relative to true value
     """
 
@@ -333,6 +338,7 @@ def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0, mag
     :param n_reps: number of trajectory replicates
     :param show_plot: T/F flag of whether or not to display histograms of estimator errors
     :param loc_std: standard deviation of localization error (um)
+    :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
     :return p_error: array of percent error between mean posterior estimation and true value for each run with each
     number of dimensions
     """
@@ -363,6 +369,7 @@ def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std, mag=None, hurs
     :param dt: timestep(s) used to generate trajectories (s)
     :param n_reps: number(s) of reps to run to calculate mean and mediate percent error
     :param loc_std: standard deviation for Gaussian localization error (um)
+    :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
     :return: three dataframes (for 1, 2, and 3 dimensions); each contains the mean percent posterior error relative to
     true diffusion constant value, for all pairs of trajectory lengths and localization errors includes in these two
     input lists

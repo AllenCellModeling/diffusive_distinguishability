@@ -8,11 +8,12 @@ import matplotlib.pyplot as plt
 def simulate_fbm_df(d_const, n_dim, n_steps, dt, loc_std=0, hurst = 0.5):
     """Simulate and output a single trajectory of fractional brownian motion in a specified number of dimensions.
 
+    :param d_const: diffusion constant in um2/s
     :param n_dim: number of spatial dimensions for simulation (1, 2, or 3)
-    :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
     :param n_steps: trajectory length (number of steps)
     :param dt: timestep size (s)
     :param loc_std: standard deviation for Gaussian localization error (um)
+    :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
     :return: trajectory dataframe (position in n_dim dimensions, at each timepoint)
     """
 
