@@ -17,35 +17,41 @@ def simulate_fbm_df(d_const, n_dim, n_steps, dt, loc_std=0, hurst = 0.5):
     :return: trajectory dataframe (position in n_dim dimensions, at each timepoint)
     """
 
+    # create fractional brownian motion trajectory generator
+    # Package ref: https://github.com/crflynn/fbm
     f = FBM(n = n_steps, hurst=hurst, length = n_steps*dt, method='hosking')
-    t_values = f.times()
     
+    # get time list and trajectory where each timestep has and n-dimensional vector step size
+    t_values = f.times()
     fbm_sim = []
     for dim in range(n_dim):
         fbm_sim.append(f.fbm()*np.sqrt(2*d_const))
 
     df = pd.DataFrame()
- 
     for i in range(n_steps):
 
+        # for initial time point, start at origin and optionally add noise
         if i == 0:
             x_curr = [fbm_sim[dim][i] for dim in range(n_dim)]
             noise_curr = [loc_std*np.random.randn() for _dim in range(n_dim)]
             x_obs_curr = [x_curr[dim] + noise_curr[dim] for dim in range(n_dim)]
+        # for latter timepoints, set "current" position to position determined by displacement out of the last timepoint
         else:
             x_curr = x_next
             x_obs_curr = x_obs_next
 
+        # Get next n-dimensional position
         x_next = [fbm_sim[dim][i+1] for dim in range(n_dim)]
-
+        # Get noise to add to next position, to get the observed position
         noise_next = [loc_std*np.random.randn() for _dim in range(n_dim)]
         x_obs_next = [x_next[dim] + noise_next[dim] for dim in range(n_dim)]
-
+        # break current and next position into vector and magnitdue displacements
         dx_obs = [x_obs_next[dim] - x_obs_curr[dim] for dim in range(n_dim)]
         dx = [x_next[dim] - x_curr[dim] for dim in range(n_dim)]
         dr_obs = np.linalg.norm(dx_obs)
         dr = np.linalg.norm(dx)
         
+        # Add timestep data to dataframe
         data = {'t_step': t_values[i], 'x': x_curr, 'x_obs': x_obs_curr, 'dx': dx, 'dx_obs': dx_obs, 'dr': dr, 'dr_obs': dr_obs}
         df = df.append(data, ignore_index=True)
         
@@ -57,9 +63,11 @@ def plot_trajectory(df):
     :param df: trajectory dataframe formatted as in 'simulate_fbm_df' function
     """
 
+    # Get number of steps in trajectory and number of spatial dimensions
     n_steps = len(df['x'])
     n_dim = len(df['x'].iloc[0])
 
+    # Plot x(t) if 1D and y(x) in 2D
     x = [df['x'].iloc[i][0] for i in range(n_steps)]
     if n_dim == 1:
         plt.plot(df['t_step'], x)
@@ -67,6 +75,7 @@ def plot_trajectory(df):
         y =  [df['x'].iloc[i][1] for i in range(n_steps)]
         plt.plot(x, y, color = 'b')
     
+    # If noise added, plot observed trajectory
     if df['x_obs'].iloc[0][0] != 0:
         xx = [df['x_obs'].iloc[i][0] for i in range(n_steps)]
         if n_dim == 1:
@@ -77,7 +86,7 @@ def plot_trajectory(df):
 
 
 def get_fBm_diffusivity(df, tau):
-    """Get effective diffusion constant for a given timescale from fBm
+    """Get effective diffusion constant for a given timescale (tau) from fBm
     :param df: dataframe
     :param tau: timescale for diffusivity measurement
     :return: diffusivity(tau)
