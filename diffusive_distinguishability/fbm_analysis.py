@@ -24,10 +24,8 @@ def simulate_fbm_df(d_const, n_dim, n_steps, dt, loc_std=0, hurst = 0.5):
     for dim in range(n_dim):
         fbm_sim.append(f.fbm()*np.sqrt(2*d_const))
 
-    # initialize position at origin
     df = pd.DataFrame()
  
-    # at each time-step, stochastically select step size in each dimension to find new location to add to trajectory
     for i in range(n_steps):
 
         if i == 0:
@@ -55,6 +53,9 @@ def simulate_fbm_df(d_const, n_dim, n_steps, dt, loc_std=0, hurst = 0.5):
 
 
 def plot_trajectory(df):
+    """Plot a trajectory in 1D vs time or in 2D
+    :param df: trajectory dataframe formatted as in 'simulate_fbm_df' function
+    """
 
     n_steps = len(df['x'])
     n_dim = len(df['x'].iloc[0])
