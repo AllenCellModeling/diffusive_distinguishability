@@ -29,24 +29,24 @@ def simulate_diffusion_df(n_dim, d_const, n_steps, dt, loc_std=0):
     x = x0
     x_obs = [sum(i) for i in zip(x, [loc_std*np.random.randn() for _dim in range(n_dim)])]
     df = pd.DataFrame()
-    
+
     # at each time-step, stochastically select step size in each dimension to find new location to add to trajectory
     for t in np.linspace(0, (n_steps-1)*dt, n_steps):
-        
+
         dx = [np.sqrt(2*d_const*dt)*np.random.randn() for _dim in range(n_dim)]
         noise = [loc_std*np.random.randn() for _dim in range(n_dim)]
-        
+
         x_new = [sum(i) for i in zip(x, dx)]
         x_obs_new = [sum(i) for i in zip(x_new, noise)]
         dx_obs = [sum(i) for i in zip(x_obs_new, np.negative(x_obs))]
         dr = np.linalg.norm(dx)
         dr_obs = np.linalg.norm(dx_obs)
-        
+
         data = {'t_step': t, 'x': x, 'x_obs': x_obs, 'dx': dx, 'dx_obs': dx_obs, 'dr': dr, 'dr_obs': dr_obs}
         df = df.append(data, ignore_index=True)
         x = x_new
         x_obs = x_obs_new
-        
+
     return df
 
 
@@ -68,7 +68,7 @@ def trajectory_df_from_data(trajectory):
         dx_obs = trajectory[t+1] - trajectory[t]
         data = {'t_step': t, 'x_obs': trajectory[t], 'dx_obs': dx_obs, 'dr_obs': np.linalg.norm(dx_obs)}
         df = df.append(data, ignore_index=True)
-        
+
     return df
 
 
@@ -88,10 +88,10 @@ def estimate_diffusion(n_dim, dt, dr, prior=scipy.stats.distributions.invgamma(0
     dr = np.array(dr)/np.sqrt(2*n_dim*dt)
     alpha0, beta0 = invgamma_fullparams(prior)
     alpha,  beta = len(dr), sum(dr**2)
-        
+
     return scipy.stats.distributions.invgamma(alpha0+alpha, scale=beta0+beta), alpha0+alpha, beta0+beta
 
-    
+
 def generate_posterior(n_dim, d_const, n_steps, dt, loc_std=0, hurst=None):
     """
     Simulate a single trajectory and find the diffusion constant posterior (inverse gamma) distribution.
@@ -104,13 +104,13 @@ def generate_posterior(n_dim, d_const, n_steps, dt, loc_std=0, hurst=None):
     :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
     :return alpha, beta: scale and shape parameters for inverse gamma posterior for a diffusive trajectory
     """
-    
+
     # get dataframe of (x, dx) for a trajectory of length n_steps in homogeneous diffusion constant d_const
     if hurst is None:
         df = simulate_diffusion_df(n_dim, d_const, n_steps, dt, loc_std)
     else:
         df = fa.simulate_fbm_df(d_const, n_dim, n_steps, dt, loc_std, hurst)
-    
+
     # estimate posterior diffusion constant distribution using prior/posterior with inverse gamma form
     prior = scipy.stats.distributions.invgamma(0, scale=0)
     posterior, alpha, beta = estimate_diffusion(n_dim=n_dim, dt=dt, dr=df['dr_obs'], prior=prior)
@@ -134,16 +134,17 @@ def get_posterior_set(n_dim, d_const, n_steps, dt, n_reps, loc_std=0, hurst=None
     :return alpha, beta, alpha_std, beta_std, alphas, betas: medians, std deviations and arrays of scale and
     shape parameters for inverse gamma posteriors for n_reps diffusive trajectories
     """
-    
+
     with ProcessPoolExecutor() as exe:
-        results = list(exe.map(generate_posterior, *zip(*((n_dim, d_const, n_steps, dt, loc_std, hurst) for _n in range(n_reps)))))
+        results = list(exe.map(
+            generate_posterior, *zip(*((n_dim, d_const, n_steps, dt, loc_std, hurst) for _n in range(n_reps)))))
     alphas = [result[0] for result in results]
     betas = [result[1] for result in results]
-    
+
     # calculate median values for alpha and beta from n_reps simulations
     alpha = np.nanmedian(np.asarray(alphas))
     beta = np.nanmedian(np.asarray(betas))
-    
+
     return alpha, beta, alphas, betas
 
 
@@ -178,7 +179,7 @@ def invgamma_kldiv(param1, param2):
     term4c = -np.log(beta1)
     term4d = -alpha2*np.log(beta2)
     term4e = -math.lgamma(alpha1)
-    
+
     return term1 + term2 + term3 + term4a + term4b + term4c + term4d + term4e
 
 
@@ -206,7 +207,7 @@ def compare2(n_dim, d_const1, mult, n_steps, dt, n_reps, loc_std=0, hurst=None):
     # for n_reps trajectories of length n_steps, get median values for posterior parameters and their std
     alpha1, beta1, alphas1, betas1 = get_posterior_set(n_dim, d_const1, n_steps, dt, n_reps, loc_std, hurst)
     alpha2, beta2, alphas2, betas2 = get_posterior_set(n_dim, d_const2, n_steps, dt, n_reps, loc_std, hurst)
-    
+
     # plot both posteriors
     xx = np.linspace(0, 1.5*d_const2, 50)
     plt.plot(xx, scipy.stats.distributions.invgamma(alpha1, scale=beta1).pdf(xx), label='D1 posterior')
@@ -216,13 +217,13 @@ def compare2(n_dim, d_const1, mult, n_steps, dt, n_reps, loc_std=0, hurst=None):
     plt.legend()
     plt.xlabel('Diffusion Constant')
     plt.ylabel('Probability density')
-    
+
     # print posterior-pair KL divergence and its inverse
     kl_div = invgamma_kldiv([alpha1, beta1], [alpha2, beta2])
     print('KL div: ' + str(kl_div))
     print('Inverse: ' + str(1./kl_div))
 
-    
+
 def fill_heatmap_gen(n_dim, d_const, mult_list, n_steps, dt, n_reps, loc_std=0, hurst=None):
     """
     Generate a heatmap of KL divergence values for pairwise comparison of diffusion constant posterior
@@ -234,7 +235,7 @@ def fill_heatmap_gen(n_dim, d_const, mult_list, n_steps, dt, n_reps, loc_std=0, 
     d_const*mult, then calculate the KL divergence of the posteriors for (d_const, d_const*multiplier) and store in
     dataframe. Repeat for all pairs of (n_steps, multiplier) to fill the dataframe. The results is a heatmap of how
     distinguishable two diff constants are, conditional upon their relative values and the length of trajectories used.
-    
+
     :param n_dim: number of spatial dimensions
     :param d_const: diffusion constant (um2/s)
     :param mult_list: list of multipliers to get set of d_const2 values, where d_const2 = mult*d_const
@@ -245,7 +246,7 @@ def fill_heatmap_gen(n_dim, d_const, mult_list, n_steps, dt, n_reps, loc_std=0, 
     :param hurst: Hurst index in range (0,1), hurst=0.5 gives brownian motion
     :return df: dataframe containing the pairwise KL divergences
     """
-    
+
     # find input parameter that is a list, indicating that it is the parameter to be swept over
     params = [d_const, n_steps, dt, loc_std]
     is_list = [isinstance(item, (list, np.ndarray)) for item in params]
@@ -262,7 +263,7 @@ def fill_heatmap_gen(n_dim, d_const, mult_list, n_steps, dt, n_reps, loc_std=0, 
     # loop through d_const pairs and find their posterior fit parameters and pairwise KL divergences
     for x_ind in range(len(x_list)):
         for m_ind in range(len(mult_list)):
-            
+
             # for individual model run, get single sweep parameter value and select pair of diffusion constants
             params[param_ind] = x_list[x_ind]
             d_const1 = params[0]
@@ -270,11 +271,13 @@ def fill_heatmap_gen(n_dim, d_const, mult_list, n_steps, dt, n_reps, loc_std=0, 
             n_steps = params[1]
             dt = params[2]
             loc_std = params[3]
-            
+
             # calculate posterior fit params and their std's
-            alpha1_med, beta1_med, alphas1, betas1 = get_posterior_set(n_dim, d_const1, n_steps, dt, n_reps, loc_std, hurst)
-            alpha2_med, beta2_med, alphas2, betas2 = get_posterior_set(n_dim, d_const2, n_steps, dt, n_reps, loc_std, hurst)
-            
+            alpha1_med, beta1_med, alphas1, betas1 = get_posterior_set(
+                n_dim, d_const1, n_steps, dt, n_reps, loc_std, hurst)
+            alpha2_med, beta2_med, alphas2, betas2 = get_posterior_set(
+                n_dim, d_const2, n_steps, dt, n_reps, loc_std, hurst)
+
             # store KL divergence of posteriors in dataframe
             df.iat[m_ind, x_ind] = invgamma_kldiv([alpha1_med, beta1_med], [alpha2_med, beta2_med])
 
@@ -293,7 +296,7 @@ def show_error_hist(n_dim, p_error):
     :param p_error: array of percent error for all runs in each number of spatial dimensions
     """
     fig, axs = plt.subplots(1, len(n_dim), figsize=(18, 6))
-        
+
     for i in range(len(n_dim)):
         print('Dim = '+str(i+1)+': '+str(np.mean(p_error[i]))+' +- '+str(np.std(p_error[i])/len(p_error[i])))
         sns.distplot(p_error[i], bins=30, ax=axs[i])
@@ -302,8 +305,8 @@ def show_error_hist(n_dim, p_error):
         axs[i].set_title('Dim = '+str(i+1))
     plt.subplots_adjust(wspace=0.5)
     plt.show()
-    
-    
+
+
 def get_single_error(dim, d_const, n_steps, dt, n, loc_std, mag=None, hurst=None):
     """
     Generate single posterior and calculate percent error of posterior mean relative to the true value.
@@ -324,8 +327,8 @@ def get_single_error(dim, d_const, n_steps, dt, n, loc_std, mag=None, hurst=None
     if mag is not None and mag:
         error = np.abs(error)
     return 100*((post_mean - d_const)/d_const)
-    
-    
+
+
 def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0, mag=None, hurst=None):
     """
     Given a diffusion constant, get the posterior for a trajectory of length n_steps and timestep dt. Repeat n_reps
@@ -346,12 +349,13 @@ def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0, mag
     p_error = []
     for dim in n_dim:
         with ProcessPoolExecutor() as exe:
-            results = list(exe.map(get_single_error, *zip(*((dim, d_const, n_steps, dt, n, loc_std, mag, hurst) for n in range(n_reps)))))
+            results = list(exe.map(
+                get_single_error, *zip(*((dim, d_const, n_steps, dt, n, loc_std, mag, hurst) for n in range(n_reps)))))
         p_error.append(results)
-        
+
     # uncomment below to save error results as .npy
-    #np.save('std_'+str(loc_std), p_error)
-    
+    # np.save('std_'+str(loc_std), p_error)
+
     # display histogram of percent errors for n_reps runs of simulation with diffusion constant d_const
     if show_plot:
         show_error_hist(n_dim, p_error)
@@ -374,10 +378,10 @@ def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std, mag=None, hurs
     true diffusion constant value, for all pairs of trajectory lengths and localization errors includes in these two
     input lists
     """
-    
+
     size = 8
     plt.subplots(1, 3, figsize=(3*size, size))
-    
+
     data1 = np.zeros((len(n_steps_list), len(loc_std)))
     data2 = np.zeros((len(n_steps_list), len(loc_std)))
     data3 = np.zeros((len(n_steps_list), len(loc_std)))
@@ -391,10 +395,10 @@ def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std, mag=None, hurs
     df1 = pd.DataFrame(data=data1, columns=loc_std, index=n_steps_list)
     df2 = pd.DataFrame(data=data2, columns=loc_std, index=n_steps_list)
     df3 = pd.DataFrame(data=data3, columns=loc_std, index=n_steps_list)
-    
+
     return df1, df2, df3
 
-    
+
 # Plotting support functions
 
 
@@ -408,11 +412,11 @@ def get_ticks(tick_values, n_round, n_ticks):
     :return ticks: list of axis tick values to display
     """
     ticks = tick_values.round(n_round)
-    
+
     keep_ticks = ticks[::int(len(ticks)/n_ticks)]
     ticks = ['' for _t in ticks]
     ticks[::int(len(ticks)/n_ticks)] = keep_ticks
-    
+
     return ticks
 
 
@@ -436,23 +440,23 @@ def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_l
     # set y ticks: round and only display some to improve readability
     y_ticks = get_ticks(df1.index.values, n_round, n_ticks)
     fig, axs = plt.subplots(1, 2, figsize=(2*size, size))
-    
+
     # plot first df as heatmap, using a cmap cutoff value if provided
     if vmax1 is None:
         sns.heatmap(df1, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[0], cmap='viridis')
     else:
-        sns.heatmap(df1, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[0], cmap='viridis', vmax = vmax1)
+        sns.heatmap(df1, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[0], cmap='viridis', vmax=vmax1)
     axs[0].set(xlabel=x_lab, ylabel=y_lab, title=title1)
     axs[0].invert_yaxis()
-    
+
     # plot second df as heatmap, using a cmap cutoff value if provided
     if vmax2 is None:
         sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[1], cmap='viridis')
     else:
-        sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[1], cmap='viridis', vmax = vmax2)
+        sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[1], cmap='viridis', vmax=vmax2)
     axs[1].set(xlabel=x_lab, ylabel=y_lab, title=title2)
     axs[1].invert_yaxis()
-    
+
     # if a filename is provided, save the figure with this filename; otherwise do not save
     if title is not None:
         plt.savefig(title, format='pdf')

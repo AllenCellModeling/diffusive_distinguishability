@@ -1,11 +1,10 @@
-import ndim_homogeneous_distinguishability as hd
 from fbm import FBM
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def simulate_fbm_df(d_const, n_dim, n_steps, dt, loc_std=0, hurst = 0.5):
+def simulate_fbm_df(d_const, n_dim, n_steps, dt, loc_std=0, hurst=0.5):
     """Simulate and output a single trajectory of fractional brownian motion in a specified number of dimensions.
 
     :param d_const: diffusion constant in um2/s
@@ -19,8 +18,8 @@ def simulate_fbm_df(d_const, n_dim, n_steps, dt, loc_std=0, hurst = 0.5):
 
     # create fractional brownian motion trajectory generator
     # Package ref: https://github.com/crflynn/fbm
-    f = FBM(n = n_steps, hurst=hurst, length = n_steps*dt, method='hosking')
-    
+    f = FBM(n=n_steps, hurst=hurst, length=n_steps*dt, method='daviesharte')
+
     # get time list and trajectory where each timestep has and n-dimensional vector step size
     t_values = f.times()
     fbm_sim = []
@@ -30,14 +29,12 @@ def simulate_fbm_df(d_const, n_dim, n_steps, dt, loc_std=0, hurst = 0.5):
     df = pd.DataFrame()
     for i in range(n_steps):
 
+        x_curr = [fbm_sim[dim][i] for dim in range(n_dim)]
         # for initial time point, start at origin and optionally add noise
         if i == 0:
-            x_curr = [fbm_sim[dim][i] for dim in range(n_dim)]
-            noise_curr = [loc_std*np.random.randn() for _dim in range(n_dim)]
-            x_obs_curr = [x_curr[dim] + noise_curr[dim] for dim in range(n_dim)]
+            x_obs_curr = [x_curr[dim] + loc_std*np.random.randn() for dim in range(n_dim)]
         # for latter timepoints, set "current" position to position determined by displacement out of the last timepoint
         else:
-            x_curr = x_next
             x_obs_curr = x_obs_next
 
         # Get next n-dimensional position
@@ -50,11 +47,12 @@ def simulate_fbm_df(d_const, n_dim, n_steps, dt, loc_std=0, hurst = 0.5):
         dx = [x_next[dim] - x_curr[dim] for dim in range(n_dim)]
         dr_obs = np.linalg.norm(dx_obs)
         dr = np.linalg.norm(dx)
-        
+        t = t_values[i]
+
         # Add timestep data to dataframe
-        data = {'t_step': t_values[i], 'x': x_curr, 'x_obs': x_obs_curr, 'dx': dx, 'dx_obs': dx_obs, 'dr': dr, 'dr_obs': dr_obs}
+        data = {'t_step': t, 'x': x_curr, 'x_obs': x_obs_curr, 'dx': dx, 'dx_obs': dx_obs, 'dr': dr, 'dr_obs': dr_obs}
         df = df.append(data, ignore_index=True)
-        
+
     return df
 
 
@@ -72,17 +70,17 @@ def plot_trajectory(df):
     if n_dim == 1:
         plt.plot(df['t_step'], x)
     elif n_dim == 2:
-        y =  [df['x'].iloc[i][1] for i in range(n_steps)]
-        plt.plot(x, y, color = 'b')
-    
+        y = [df['x'].iloc[i][1] for i in range(n_steps)]
+        plt.plot(x, y, color='b')
+
     # If noise added, plot observed trajectory
     if df['x_obs'].iloc[0][0] != 0:
         xx = [df['x_obs'].iloc[i][0] for i in range(n_steps)]
         if n_dim == 1:
             plt.plot(df['t_step'], xx)
         elif n_dim == 2:
-            yy =  [df['x_obs'].iloc[i][1] for i in range(n_steps)]
-            plt.plot(xx, yy, color = 'o')
+            yy = [df['x_obs'].iloc[i][1] for i in range(n_steps)]
+            plt.plot(xx, yy, color='o')
 
 
 def get_fBm_diffusivity(df, tau):
@@ -91,7 +89,5 @@ def get_fBm_diffusivity(df, tau):
     :param tau: timescale for diffusivity measurement
     :return: diffusivity(tau)
     """
-    n_dim= len(df['x'].iloc[0])
+    n_dim = len(df['x'].iloc[0])
     return np.mean(df['dr_obs']**2)/(2*n_dim*tau)
-
-
