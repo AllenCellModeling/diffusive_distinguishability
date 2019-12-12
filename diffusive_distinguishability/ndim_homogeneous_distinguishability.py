@@ -392,6 +392,8 @@ def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std, mag=None, hurs
             data1[ind_steps, ind_error] = np.mean(p_error[0])
             data2[ind_steps, ind_error] = np.mean(p_error[1])
             data3[ind_steps, ind_error] = np.mean(p_error[2])
+            print('Error: '+str(std))
+        print('STEPS: '+str(n_steps)+'----------------------------------')
     df1 = pd.DataFrame(data=data1, columns=loc_std, index=n_steps_list)
     df2 = pd.DataFrame(data=data2, columns=loc_std, index=n_steps_list)
     df3 = pd.DataFrame(data=data3, columns=loc_std, index=n_steps_list)
