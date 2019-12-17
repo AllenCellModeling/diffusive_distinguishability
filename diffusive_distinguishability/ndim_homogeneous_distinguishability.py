@@ -457,6 +457,8 @@ def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_l
     axs[1].set(xlabel=x_lab, ylabel=y_lab, title=title2)
     axs[1].invert_yaxis()
 
+    plt.tight_layout()
+
     # if a filename is provided, save the figure with this filename; otherwise do not save
     if title is not None:
         plt.savefig(title, format='pdf')
