@@ -16,6 +16,8 @@ def simulate_fbm_df(d_const, n_dim, n_steps, dt, loc_std=0, hurst=0.5):
     :return: trajectory dataframe (position in n_dim dimensions, at each timepoint)
     """
 
+    np.random.seed()
+
     # create fractional brownian motion trajectory generator
     # Package ref: https://github.com/crflynn/fbm
     f = FBM(n=n_steps, hurst=hurst, length=n_steps*dt, method='daviesharte')

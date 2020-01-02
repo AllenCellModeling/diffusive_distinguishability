@@ -326,7 +326,7 @@ def get_single_error(dim, d_const, n_steps, dt, n, loc_std, mag=None, hurst=None
     error = 100*((post_mean - d_const)/d_const)
     if mag is not None and mag:
         error = np.abs(error)
-    return 100*((post_mean - d_const)/d_const)
+    return error
 
 
 def get_dim_error(n_dim, d_const, n_steps, dt, n_reps, show_plot, loc_std=0, mag=None, hurst=None):
@@ -387,7 +387,7 @@ def error_sensitivity(d_const, n_steps_list, dt, n_reps, loc_std, mag=None, hurs
     data3 = np.zeros((len(n_steps_list), len(loc_std)))
     for n_steps in n_steps_list:
         for std in loc_std:
-            p_error = get_dim_error([1, 2, 3], d_const, n_steps, dt, n_reps, False, std, mag, hurst)
+            p_error = get_dim_error(n_dim=[1, 2, 3], d_const=d_const, n_steps=n_steps, dt=dt, n_reps=n_reps, show_plot=False, loc_std=std, mag=mag, hurst=hurst)
             ind_steps, ind_error = np.asarray(n_steps_list).searchsorted(n_steps), np.asarray(loc_std).searchsorted(std)
             data1[ind_steps, ind_error] = np.mean(p_error[0])
             data2[ind_steps, ind_error] = np.mean(p_error[1])
@@ -456,6 +456,8 @@ def plot_df_results(df1, df2, n_round, n_ticks, size, title1, title2, x_lab, y_l
         sns.heatmap(df2, yticklabels=y_ticks, cbar_kws={'label': title1}, ax=axs[1], cmap='viridis', vmax=vmax2)
     axs[1].set(xlabel=x_lab, ylabel=y_lab, title=title2)
     axs[1].invert_yaxis()
+
+    plt.tight_layout()
 
     # if a filename is provided, save the figure with this filename; otherwise do not save
     if title is not None:
