@@ -26,10 +26,11 @@ The python package ``ndim_homogeneous_distinguishability.py`` contains the meat 
 This repo also includes:
 
 1. ``ndim_diffusion_analysis_tutorial.ipynb``: Jupyter notebook providing examples of how to use these functions, as well as some of our own analysis of diffusivity distinguishability. This includes the function calls used to generate some ``"Results"`` figures in our manuscript
-2. ``figure_production.ipynb``: Jupyter notebook used to generate the remainder of our computationally derived manuscript figures, provided for reproducibility
-3. ``test_overestimation.ipynb``: Jupyter notebook containing a toy model quantifying the relative impact of localization error on diffusion estimates conditional on number of spatial dimensions
-4. ``saved_data/``: Directory containing some example pre-calculated datasets (in the form of pickled dataframes), generated in our Jupyter notebook example analyses described above. Text files are included with the datasets, specifying the parameters used in their generation
-5. ``figures/``: Directory storing all of our computationally derived manuscript figured, stored as image files
+2. ``ndim_fbm_analysis_tutorial.ipynb``: Jupyter notebook similar to the one described above, but using trajectories generated using fractional brownian motion rather than pure homogeneous diffusion
+3. ``figure_production.ipynb``: Jupyter notebook used to generate the remainder of our computationally derived manuscript figures, provided for reproducibility
+4. ``test_overestimation.ipynb``: Jupyter notebook containing a toy model quantifying the relative impact of localization error on diffusion estimates conditional on number of spatial dimensions
+5. ``saved_data/``: Directory containing some example pre-calculated datasets (in the form of pickled dataframes), generated in our Jupyter notebook example analyses described above. Text files are included with the datasets, specifying the parameters used in their generation
+6. ``figures/``: Directory storing all of our computationally derived manuscript figured, stored as image files
 
 
 * Free software: Allen Institute Software License
